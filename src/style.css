@@ -213,3 +213,7 @@ footer { padding: 28px var(--pad); color: var(--mute); font-size: 11px; border-t
 .modal-ui.preview .m-actions { display: none; }
 
 .modal-open .nav { display: none; }
+
+/* while the 3D viewer is open, hide the page behind it (also its card buttons) */
+.modal-open main { visibility: hidden; }
+.modal-open .bg-icons { visibility: hidden; }
