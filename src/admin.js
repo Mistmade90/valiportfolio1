@@ -41,6 +41,56 @@ export function initAdmin(app) {
   }
   $('#btn-add').onclick = showAdd
   $('#btn-pw').onclick = () => showPassword({ forced: false })
+  $('#btn-profile').onclick = showProfile
+
+  async function shrink(file, max = 800) { // keep the picture small (fast page + fits Vercel's upload limit)
+    try {
+      const bmp = await createImageBitmap(file)
+      const k = Math.min(1, max / Math.max(bmp.width, bmp.height))
+      const c = document.createElement('canvas')
+      c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k)
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height)
+      const blob = await new Promise((r) => c.toBlob(r, 'image/webp', 0.9))
+      return blob && blob.type === 'image/webp' ? new File([blob], 'avatar.webp', { type: 'image/webp' }) : file
+    } catch { return file }
+  }
+
+  function showProfile() {
+    const cur = app.getProfile()
+    const d = dialog(`
+      <h3>Edit profile</h3>
+      <form class="form">
+        <label>Profile picture <small>png / jpg / webp — optional</small>
+          <div class="pfp-row"><img alt="" src="${esc(cur.avatar || '')}" /><input name="avatar" type="file" accept="image/*" /></div>
+        </label>
+        <label>Status <small>e.g. Available, Busy, Away</small>
+          <input name="status" maxlength="40" list="status-list" value="${esc(cur.status || '')}" required />
+          <datalist id="status-list"><option>Available</option><option>Busy</option><option>Away</option><option>Open for commissions</option></datalist>
+        </label>
+        <label>Description <small>the text under your name</small>
+          <textarea name="bio" maxlength="800" required>${esc(cur.bio || '')}</textarea>
+        </label>
+        <p class="err" hidden></p>
+        <div class="row"><button type="button" class="btn" data-close>Cancel</button><button class="btn primary">Save</button></div>
+      </form>`)
+    const f = $('form', d.el), err = $('.err', d.el), btn = $('.primary', d.el)
+    f.avatar.onchange = () => { const x = f.avatar.files[0]; if (x) $('.pfp-row img', d.el).src = URL.createObjectURL(x) }
+    f.onsubmit = async (e) => {
+      e.preventDefault()
+      err.hidden = true; btn.disabled = true; btn.textContent = 'Saving…'
+      try {
+        const fd = new FormData()
+        fd.append('status', f.status.value); fd.append('bio', f.bio.value)
+        if (f.avatar.files[0]) fd.append('avatar', await shrink(f.avatar.files[0]))
+        const r = await api('/profile', { method: 'POST', form: fd })
+        app.applyProfile(r.profile, { instant: true })
+        d.close(); toast('Profile saved')
+      } catch (ex) {
+        err.textContent = ex.message; err.hidden = false; btn.disabled = false; btn.textContent = 'Save'
+        if (ex.status === 401) { setToken(''); setAdmin(false) }
+      }
+    }
+  }
 
   function showLogin() {
     const d = dialog(`

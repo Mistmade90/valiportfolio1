@@ -73,6 +73,12 @@ export async function handle(req, res) {
       return json(res, 200, { models, hidden })
     }
 
+    if (route === '/profile' && method === 'GET') {
+      const all = await store.listJson('profile')
+      all.sort((x, y) => (y.updated ?? 0) - (x.updated ?? 0))
+      return json(res, 200, { profile: all[0] ?? null })
+    }
+
     if (route === '/login' && method === 'POST') {
       const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '')
       const f = fails.get(ip)
@@ -104,6 +110,30 @@ export async function handle(req, res) {
       return json(res, 200, { token: await sign(store, na) })
     }
     if (a.mustChange) return json(res, 403, { error: 'Please change your password first.' })
+
+    if (route === '/profile' && method === 'POST') {
+      const body = await readBody(req)
+      const headers = new Headers()
+      for (const [k, v] of Object.entries(req.headers)) if (typeof v === 'string') headers.set(k, v)
+      const form = await new Request('http://x/', { method: 'POST', headers, body }).formData()
+      const old = (await store.listJson('profile')).sort((x, y) => (y.updated ?? 0) - (x.updated ?? 0))
+      const prev = old[0] ?? {}
+      const ts = Date.now()
+      const rec = {
+        status: String(form.get('status') ?? prev.status ?? 'Available').trim().slice(0, 40) || 'Available',
+        bio: String(form.get('bio') ?? prev.bio ?? '').trim().slice(0, 800),
+        avatar: prev.avatar ?? null,
+        updated: ts,
+      }
+      const av = form.get('avatar')
+      if (av && av.size) {
+        if (!TEX_EXT.includes(ext(av.name)) || av.size > 5 * 1024 * 1024) return json(res, 400, { error: 'Profile picture must be png/jpg/webp/gif and under 5 MB.' })
+        rec.avatar = await store.putFile(`profile/${ts}.${ext(av.name)}`, Buffer.from(await av.arrayBuffer()))
+      }
+      await store.putJson(`profile/${ts}.json`, rec) // new file each save → never overwritten, never stale
+      for (const o of old) if (o.updated) await store.delJson(`profile/${o.updated}.json`).catch(() => {})
+      return json(res, 200, { profile: rec })
+    }
 
     if (route === '/models' && method === 'POST') {
       const body = await readBody(req)

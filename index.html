@@ -23,7 +23,7 @@
       <div class="hero-left">
         <div class="avatar">
           <img src="/profile.webp" alt="Valithar" width="400" height="400" decoding="async"
-               onerror="this.parentElement.classList.add('noimg');this.remove()" />
+               onerror="this.parentElement.classList.add('noimg')" onload="this.parentElement.classList.remove('noimg')" />
           <span class="initial">V</span>
           <div class="status"><i>♛</i><div><small>Status</small><b>Available</b></div></div>
         </div>
@@ -44,6 +44,7 @@
         <div class="cta">
           <a class="btn primary" href="#work">View Projects <span>↗</span></a>
           <a class="btn" href="#contact">Contact Me</a>
+          <button class="btn admin-only" id="btn-profile">✎ Edit profile</button>
         </div>
 
         <div class="stats">

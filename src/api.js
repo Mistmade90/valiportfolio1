@@ -28,3 +28,7 @@ export async function fetchModels() {
   try { const d = await api('/models'); return { models: d.models || [], hidden: d.hidden || [] } } catch { return { models: [], hidden: [] } }
 }
 export const deleteModel = (id) => api('/models?id=' + encodeURIComponent(id), { method: 'DELETE' })
+
+export async function fetchProfile() {
+  try { return (await api('/profile')).profile } catch { return null }
+}

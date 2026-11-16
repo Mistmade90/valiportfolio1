@@ -5,7 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { items } from './models.js'
 import { makeDemo } from './demos.js'
-import { fetchModels, deleteModel } from './api.js'
+import { fetchModels, deleteModel, fetchProfile } from './api.js'
 import { initAdmin } from './admin.js'
 
 const $ = (s) => document.querySelector(s)
@@ -363,20 +363,36 @@ requestAnimationFrame(tick)
 document.querySelectorAll('.section-head, .contact > *').forEach((el) => { el.classList.add('reveal'); io.observe(el) })
 buildGrid()
 refreshRemote()
-initAdmin({ openPreview, reload: refreshRemote })
+initAdmin({ openPreview, reload: refreshRemote, getProfile: () => ({ status: $('.status b').textContent, bio: bio.dataset.text, avatar: $('.avatar img').getAttribute('src') }), applyProfile })
 
 /* typewriter intro */
 function type(el, text, speed, done) {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = text; done?.(); return }
   let i = 0
-  const id = setInterval(() => {
+  clearInterval(el._t)
+  const id = el._t = setInterval(() => {
     el.textContent = text.slice(0, ++i)
     if (i >= text.length) { clearInterval(id); done?.() }
   }, speed)
 }
 const bio = $('#bio')
-const bioText = bio.dataset.text
-type($('#name'), 'Valithar', 110, () => setTimeout(() => type(bio, bioText, 14), 150))
+
+/* editable profile (picture, status, description) */
+const STATUS_COLORS = [[/avail|open|online|free/i, '#3dff7a'], [/busy|closed|unavail|booked|full/i, '#ff5a5a'], [/away|brb|soon|later/i, '#ffc247']]
+function applyProfile(p, { instant = false } = {}) {
+  if (!p) return
+  if (p.avatar) $('.avatar img').src = p.avatar
+  if (p.status) {
+    $('.status b').textContent = p.status
+    $('.status').style.setProperty('--dot', (STATUS_COLORS.find(([re]) => re.test(p.status)) || [0, '#9aa0a6'])[1])
+  }
+  if (p.bio) { bio.dataset.text = p.bio; if (instant) { clearInterval(bio._t); bio.textContent = p.bio } }
+}
+let profile = null
+const profileReady = fetchProfile().then((p) => { profile = p; applyProfile(p) })
+
+const bioText = () => bio.dataset.text
+type($('#name'), 'Valithar', 110, () => Promise.race([profileReady, new Promise((r) => setTimeout(r, 1500))]).then(() => setTimeout(() => type(bio, bioText(), 14), 150)))
 
 /* click-to-copy Discord name */
 $('#discord')?.addEventListener('click', (e) => {
