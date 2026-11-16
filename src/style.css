@@ -227,3 +227,8 @@ footer { padding: 28px var(--pad); color: var(--mute); font-size: 11px; border-t
 .pfp-row { display: flex; align-items: center; gap: 16px; }
 .pfp-row img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; background: #050505; border: 1px solid var(--line); flex: none; }
 .pfp-row input { flex: 1; }
+
+/* contact: socials are the main element now */
+.contact .socials { margin-top: 8px; gap: clamp(20px, 4vw, 56px); font-size: clamp(16px, 2.6vw, 34px); font-weight: 800; letter-spacing: -.02em; text-transform: none; color: var(--fg); }
+.contact .socials a { transition: color .25s; }
+.contact .socials a:hover { color: #9a9aa2; }
