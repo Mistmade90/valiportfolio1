@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <title>Valithar — Blender &amp; Roblox Builder</title>
+  <meta name="description" content="18 year old Blender modeler and Roblox Builder from Germany. Weapons, buildings and Star Wars projects." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M16 5 27 11v10L16 27 5 21V11z' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <header class="nav">
+    <a class="logo" href="#top">Valithar</a>
+    <nav>
+      <a href="#work">Projects</a>
+      <a href="#contact">Contact</a>
+      <button id="nav-login" class="navbtn">Login</button>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-left">
+        <div class="avatar">
+          <img src="/profile.webp" alt="Valithar" width="400" height="400" decoding="async"
+               onerror="this.parentElement.classList.add('noimg');this.remove()" />
+          <span class="initial">V</span>
+          <div class="status"><i>♛</i><div><small>Status</small><b>Available</b></div></div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <span class="pill"><i>✦</i> Roblox Builder</span>
+        <h1>Hi, I'm <br /><span class="name" id="name"></span></h1>
+
+        <div class="badges">
+          <span class="badge"><i>☆</i> Blender Specialist</span>
+          <span class="badge"><i>◍</i> Roblox Builder</span>
+        </div>
+
+        <p class="bio" id="bio"
+           data-text="I'm an 18 year old Blender modeler and Roblox Builder from Germany I specialize in Modeling all sorts of things from Weapons all the way to buildings. My journey through many Star wars projects has let me show my talent in many communities. This talent can be used to create your game too. Feel free to check out my projects and contact me if needed."></p>
+
+        <div class="cta">
+          <a class="btn primary" href="#work">View Projects <span>↗</span></a>
+          <a class="btn" href="#contact">Contact Me</a>
+        </div>
+
+        <div class="stats">
+          <div><b>30+</b><small>Projects</small></div>
+          <div><b>2+</b><small>Years</small></div>
+          <div><b>100%</b><small>Passion</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="work" class="work">
+      <div class="section-head">
+        <h2>Projects</h2>
+        <p><span id="count">00</span> · click to explore</p>
+        <div class="admin-actions"><button class="btn primary" id="btn-add">+ Add model</button><button class="btn" id="btn-pw">Password</button></div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section id="contact" class="contact">
+      <p class="eyebrow">Got a project?</p>
+      <a class="mail" href="mailto:roughxvi@gmail.com">roughxvi@gmail.com</a>
+      <div class="socials">
+        <a href="#" id="discord" title="Click to copy">Discord: rough4574</a><a href="https://www.roblox.com/search/users?keyword=XVI_RoughJ" target="_blank" rel="noopener">Roblox: XVI_RoughJ</a>
+      </div>
+    </section>
+
+    <footer>© <span id="yr"></span> Valithar</footer>
+  </main>
+
+  <!-- modal: backdrop + view sit UNDER the shared canvas, UI sits above it -->
+  <div class="modal-bg" id="modal-bg" hidden>
+    <div class="view modal-view" id="modal-view"></div>
+  </div>
+  <div class="modal-ui" id="modal-ui" hidden>
+    <div class="m-top">
+      <div>
+        <p class="eyebrow" id="m-tag"></p>
+        <h3 id="m-title"></h3>
+      </div>
+      <button id="m-close" aria-label="Close">✕</button>
+    </div>
+    <div class="m-bottom">
+      <div class="m-stats" id="m-stats"></div>
+      <div class="m-confirm">
+        <span>Preview — does it look right?</span>
+        <button id="m-cancel">Cancel</button>
+        <button id="m-ok" class="on">Confirm</button>
+      </div>
+      <div class="m-actions">
+        <button id="m-prev" aria-label="Previous">←</button>
+        <button id="m-wire">Wireframe</button>
+        <button id="m-rot" class="on">Auto-rotate</button>
+        <button id="m-next" aria-label="Next">→</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
