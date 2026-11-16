@@ -187,6 +187,8 @@ async function loadItem(item) {
 const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && (e.target.classList.add('in'), io.unobserve(e.target))), { threshold: 0.12 })
 
 /* ───────────── grid cards ───────────── */
+// built-in models get a stable id so they can be hidden (deleted) from the admin UI too
+items.forEach((it) => { it.id ??= 'static-' + it.src.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-') })
 let list = [...items] // static models (models.js) + uploaded ones (API)
 const grid = $('#grid')
 function buildGrid() {
@@ -199,7 +201,7 @@ function buildGrid() {
     card.tabIndex = 0
     card.innerHTML = `
       <div class="view"><span class="loading">Loading…</span></div>
-      ${item.id ? '<button class="del" title="Delete" aria-label="Delete">✕</button>' : ''}
+      ${item.id ? '<button class="del" title="Delete this model" aria-label="Delete">🗑 Delete</button>' : ''}
       <div class="cap"><div><b></b><small></small></div><span class="idx">${String(i + 1).padStart(2, '0')}</span></div>`
     card.querySelector('b').textContent = item.title
     card.querySelector('small').textContent = item.tag
@@ -212,7 +214,7 @@ function buildGrid() {
     card.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), showItem(item, { index: i })))
     card.querySelector('.del')?.addEventListener('click', async (e) => {
       e.stopPropagation()
-      if (!confirm(`Delete "${item.title}"?`)) return
+      if (!confirm(`Delete "${item.title}" from your portfolio? This cannot be undone.`)) return
       try { await deleteModel(item.id); await refreshRemote() } catch (ex) { alert(ex.message) }
     })
     v.onFrame = (dt) => { v.pivot.rotation.y += dt * (v.hover ? 1.4 : 0.25) }
@@ -221,7 +223,8 @@ function buildGrid() {
   dirty = true
 }
 async function refreshRemote() {
-  list = [...items, ...(await fetchModels())]
+  const { models, hidden } = await fetchModels()
+  list = [...items.filter((it) => !hidden.includes(it.id)), ...models]
   buildGrid()
 }
 

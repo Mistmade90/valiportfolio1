@@ -25,6 +25,6 @@ export async function api(path, { method = 'GET', json, form } = {}) {
 }
 
 export async function fetchModels() {
-  try { return (await api('/models')).models || [] } catch { return [] }
+  try { const d = await api('/models'); return { models: d.models || [], hidden: d.hidden || [] } } catch { return { models: [], hidden: [] } }
 }
 export const deleteModel = (id) => api('/models?id=' + encodeURIComponent(id), { method: 'DELETE' })

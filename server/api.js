@@ -68,7 +68,7 @@ export async function handle(req, res) {
 
     if (route === '/models' && method === 'GET') {
       const d = await store.readJson(MODELS)
-      return json(res, 200, { models: d?.models ?? [] })
+      return json(res, 200, { models: d?.models ?? [], hidden: d?.hidden ?? [] })
     }
 
     if (route === '/login' && method === 'POST') {
@@ -132,6 +132,11 @@ export async function handle(req, res) {
       const id = url.searchParams.get('id') || ''
       if (!/^[a-z0-9-]+$/.test(id)) return json(res, 400, { error: 'Bad id.' })
       const d = (await store.readJson(MODELS)) ?? { models: [] }
+      if (id.startsWith('static-')) { // built-in model from models.js: can't delete the file, so hide it
+        d.hidden = [...new Set([...(d.hidden ?? []), id])]
+        await store.writeJson(MODELS, d)
+        return json(res, 200, { ok: true })
+      }
       d.models = d.models.filter((m) => m.id !== id)
       await store.writeJson(MODELS, d)
       await store.deleteDir(`models/${id}`)
