@@ -31,16 +31,17 @@ function fsStorage() {
 
 async function blobStorage() {
   const { put, list, del } = await import('@vercel/blob')
-  const fresh = async (url) => (await fetch(url + (url.includes('?') ? '&' : '?') + 'cb=' + Date.now(), { cache: 'no-store' })).json()
   const priv = (name) => name.startsWith('private/') // never exposed: random suffix → unguessable URL
   return {
     mode: 'blob',
     async readJson(name) {
-      try {
-        const { blobs } = await list({ prefix: name.replace(/\.json$/, '') })
-        const mine = blobs.filter((b) => b.pathname.endsWith('.json')).sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
-        return mine.length ? await fresh(mine[0].url) : null
-      } catch { return null }
+      // real errors must surface (never pretend the file is empty, or a later write would wipe it)
+      const { blobs } = await list({ prefix: name.replace(/\.json$/, '') })
+      const mine = blobs.filter((b) => b.pathname.endsWith('.json')).sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
+      if (!mine.length) return null
+      const r = await fetch(mine[0].url + '?cb=' + Date.now(), { cache: 'no-store' })
+      if (!r.ok) throw new Error(`Could not read ${name} (${r.status})`)
+      return r.json()
     },
     async writeJson(name, obj) {
       const body = JSON.stringify(obj)
