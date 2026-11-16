@@ -70,7 +70,7 @@ export function initAdmin(app) {
       <h3>${forced ? 'Set a new password' : 'Change password'}</h3>
       ${forced ? '<p class="hint">First login — please choose your own password before continuing.</p>' : ''}
       <form class="form">
-        ${forced ? '' : '<label>Current password<input name="c" type="password" autocomplete="current-password" required /></label>'}
+        ${forced && current ? '' : '<label>Current password<input name="c" type="password" autocomplete="current-password" required /></label>'}
         <label>New password (min. 8 characters)<input name="n" type="password" autocomplete="new-password" minlength="8" required /></label>
         <label>Repeat new password<input name="r" type="password" autocomplete="new-password" minlength="8" required /></label>
         <p class="err" hidden></p>
@@ -82,7 +82,7 @@ export function initAdmin(app) {
       err.hidden = true
       if (f.n.value !== f.r.value) { err.textContent = 'Passwords do not match.'; err.hidden = false; return }
       try {
-        const r = await api('/password', { method: 'POST', json: { current: forced ? current : f.c.value, next: f.n.value } })
+        const r = await api('/password', { method: 'POST', json: { current: f.c ? f.c.value : current, next: f.n.value } })
         setToken(r.token)
         d.close()
         setAdmin(true)
