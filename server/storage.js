@@ -64,5 +64,7 @@ async function blobStorage() {
 
 let cached
 export function getStorage() {
+  if (process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN)
+    throw new Error('Storage is not set up. In Vercel: Storage → create a Blob store → connect it to this project → Redeploy.')
   return (cached ??= process.env.BLOB_READ_WRITE_TOKEN ? blobStorage() : Promise.resolve(fsStorage()))
 }
