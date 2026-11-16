@@ -19,6 +19,14 @@ function fsStorage() {
       await fs.mkdir(path.dirname(p), { recursive: true })
       await fs.writeFile(p, JSON.stringify(obj, null, 2))
     },
+    async putJson(rel, obj) { return this.writeJson(rel, obj) },
+    async listJson(dir) {
+      try {
+        const names = (await fs.readdir(path.join(dataDir, dir))).filter((n) => n.endsWith('.json'))
+        return (await Promise.all(names.map((n) => this.readJson(dir + '/' + n)))).filter(Boolean)
+      } catch { return [] }
+    },
+    async delJson(rel) { await fs.rm(path.join(dataDir, rel), { force: true }) },
     async putFile(rel, buf) {
       const p = path.join(upDir, rel)
       await fs.mkdir(path.dirname(p), { recursive: true })
@@ -51,6 +59,23 @@ async function blobStorage() {
         const old = blobs.filter((b) => b.url !== res.url).map((b) => b.url)
         if (old.length) await del(old)
       }
+    },
+    // one small file per record → no read-modify-write races, no stale overwrites
+    async putJson(rel, obj) {
+      await put(rel, JSON.stringify(obj), { access: 'public', contentType: 'application/json', addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 60 })
+    },
+    async listJson(dir) {
+      const { blobs } = await list({ prefix: dir + '/' })
+      return Promise.all(blobs.filter((b) => b.pathname.endsWith('.json')).map(async (b) => {
+        const r = await fetch(b.url + '?cb=' + Date.now(), { cache: 'no-store' })
+        if (!r.ok) throw new Error(`Could not read ${b.pathname} (${r.status})`)
+        return r.json()
+      }))
+    },
+    async delJson(rel) {
+      const { blobs } = await list({ prefix: rel })
+      const hit = blobs.filter((b) => b.pathname === rel).map((b) => b.url)
+      if (hit.length) await del(hit)
     },
     async putFile(rel, buf) {
       const r = await put('uploads/' + rel, buf, { access: 'public', contentType: typeOf(rel), addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 31536000 })

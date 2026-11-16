@@ -67,8 +67,10 @@ export async function handle(req, res) {
     const method = req.method
 
     if (route === '/models' && method === 'GET') {
-      const d = await store.readJson(MODELS)
-      return json(res, 200, { models: d?.models ?? [], hidden: d?.hidden ?? [] })
+      const [recs, hid, legacy] = await Promise.all([store.listJson('records'), store.listJson('hidden'), store.readJson(MODELS)])
+      const models = [...(legacy?.models ?? []), ...recs].sort((a, b) => a.created - b.created)
+      const hidden = [...new Set([...(legacy?.hidden ?? []), ...hid.map((h) => h.id)])]
+      return json(res, 200, { models, hidden })
     }
 
     if (route === '/login' && method === 'POST') {
@@ -122,23 +124,20 @@ export async function handle(req, res) {
       const rec = { id, title, tag, kind: ext(model.name), src: await put(model), created: Date.now() }
       if (mtl && mtl.size) rec.mtl = await put(mtl)
       for (const t of textures) await put(t)
-      const d = (await store.readJson(MODELS)) ?? { models: [] }
-      d.models.push(rec)
-      await store.writeJson(MODELS, d)
+      await store.putJson(`records/${id}.json`, rec)
       return json(res, 200, { model: rec })
     }
 
     if (route === '/models' && method === 'DELETE') {
       const id = url.searchParams.get('id') || ''
       if (!/^[a-z0-9-]+$/.test(id)) return json(res, 400, { error: 'Bad id.' })
-      const d = (await store.readJson(MODELS)) ?? { models: [] }
       if (id.startsWith('static-')) { // built-in model from models.js: can't delete the file, so hide it
-        d.hidden = [...new Set([...(d.hidden ?? []), id])]
-        await store.writeJson(MODELS, d)
+        await store.putJson(`hidden/${id}.json`, { id })
         return json(res, 200, { ok: true })
       }
-      d.models = d.models.filter((m) => m.id !== id)
-      await store.writeJson(MODELS, d)
+      await store.delJson(`records/${id}.json`)
+      const legacy = await store.readJson(MODELS) // older installs kept everything in models.json
+      if (legacy?.models?.some((m) => m.id === id)) { legacy.models = legacy.models.filter((m) => m.id !== id); await store.writeJson(MODELS, legacy) }
       await store.deleteDir(`models/${id}`)
       return json(res, 200, { ok: true })
     }
