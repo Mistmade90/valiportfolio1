@@ -19,6 +19,7 @@ function fsStorage() {
       await fs.mkdir(path.dirname(p), { recursive: true })
       await fs.writeFile(p, JSON.stringify(obj, null, 2))
     },
+    async getJson(rel) { return this.readJson(rel) },
     async putJson(rel, obj) { return this.writeJson(rel, obj) },
     async listJson(dir) {
       try {
@@ -63,6 +64,14 @@ async function blobStorage() {
     // one small file per record → no read-modify-write races, no stale overwrites
     async putJson(rel, obj) {
       await put(rel, JSON.stringify(obj), { access: 'public', contentType: 'application/json', addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 60 })
+    },
+    async getJson(rel) {
+      const { blobs } = await list({ prefix: rel })
+      const hit = blobs.find((b) => b.pathname === rel)
+      if (!hit) return null
+      const r = await fetch(hit.url + '?cb=' + Date.now(), { cache: 'no-store' })
+      if (!r.ok) throw new Error(`Could not read ${rel} (${r.status})`)
+      return r.json()
     },
     async listJson(dir) {
       const { blobs } = await list({ prefix: dir + '/' })

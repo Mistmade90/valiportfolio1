@@ -68,9 +68,14 @@ export async function handle(req, res) {
 
     if (route === '/models' && method === 'GET') {
       const [recs, hid, legacy] = await Promise.all([store.listJson('records'), store.listJson('hidden'), store.readJson(MODELS)])
-      const models = [...(legacy?.models ?? []), ...recs].sort((a, b) => a.created - b.created)
+      const models = [...(legacy?.models ?? []), ...recs].sort((a, b) => (a.created ?? 0) - (b.created ?? 0))
       const hidden = [...new Set([...(legacy?.hidden ?? []), ...hid.map((h) => h.id)])]
       return json(res, 200, { models, hidden })
+    }
+
+    if (route === '/skills' && method === 'GET') {
+      const [skills, hid] = await Promise.all([store.listJson('skills'), store.listJson('hidden')])
+      return json(res, 200, { skills: skills.sort((x, y) => (x.created ?? 0) - (y.created ?? 0)), hidden: hid.map((h) => h.id) })
     }
 
     if (route === '/profile' && method === 'GET') {
@@ -135,6 +140,45 @@ export async function handle(req, res) {
       return json(res, 200, { profile: rec })
     }
 
+    if (route === '/skills' && method === 'POST') {
+      const b = await readJson(req)
+      const title = String(b.title || '').trim().slice(0, 60)
+      const text = String(b.text || '').trim().slice(0, 300)
+      const icon = /^[a-z0-9-]{1,20}$/.test(b.icon || '') ? b.icon : 'cube'
+      if (!title) return json(res, 400, { error: 'Please enter a title.' })
+      let id = String(b.id || '')
+      let created = Date.now()
+      if (id) {
+        if (!/^[a-z0-9-]+$/.test(id)) return json(res, 400, { error: 'Bad id.' })
+        created = (await store.getJson(`skills/${id}.json`))?.created ?? 0 // editing keeps its place
+      } else id = (title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'skill') + '-' + crypto.randomBytes(3).toString('hex')
+      const rec = { id, title, text, icon, created }
+      await store.putJson(`skills/${id}.json`, rec)
+      return json(res, 200, { skill: rec })
+    }
+
+    if (route === '/skills' && method === 'DELETE') {
+      const id = url.searchParams.get('id') || ''
+      if (!/^[a-z0-9-]+$/.test(id)) return json(res, 400, { error: 'Bad id.' })
+      if (id.startsWith('static-')) { await store.putJson(`hidden/${id}.json`, { id }); await store.delJson(`skills/${id}.json`) }
+      else await store.delJson(`skills/${id}.json`)
+      return json(res, 200, { ok: true })
+    }
+
+    if (route === '/models/edit' && method === 'POST') {
+      const b = await readJson(req)
+      const id = String(b.id || '')
+      if (!/^[a-z0-9-]+$/.test(id)) return json(res, 400, { error: 'Bad id.' })
+      const title = String(b.title || '').trim().slice(0, 80)
+      const tag = String(b.tag || '').trim().slice(0, 40) || 'Model'
+      if (!title) return json(res, 400, { error: 'Please enter a title.' })
+      const cur = await store.getJson(`records/${id}.json`)
+      if (cur) await store.putJson(`records/${id}.json`, { ...cur, title, tag })
+      else if (id.startsWith('static-')) await store.putJson(`records/${id}.json`, { id, title, tag, override: true, created: 0 }) // built-in model: store only the changes
+      else return json(res, 404, { error: 'Model not found.' })
+      return json(res, 200, { ok: true })
+    }
+
     if (route === '/models' && method === 'POST') {
       const body = await readBody(req)
       const headers = new Headers()
@@ -163,6 +207,7 @@ export async function handle(req, res) {
       if (!/^[a-z0-9-]+$/.test(id)) return json(res, 400, { error: 'Bad id.' })
       if (id.startsWith('static-')) { // built-in model from models.js: can't delete the file, so hide it
         await store.putJson(`hidden/${id}.json`, { id })
+        await store.delJson(`records/${id}.json`)
         return json(res, 200, { ok: true })
       }
       await store.delJson(`records/${id}.json`)

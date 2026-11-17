@@ -5,8 +5,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { items } from './models.js'
 import { makeDemo } from './demos.js'
-import { fetchModels, deleteModel, fetchProfile } from './api.js'
-import { initAdmin } from './admin.js'
+import { fetchModels, deleteModel, fetchProfile, fetchSkills } from './api.js'
+import { initAdmin, editModel, editSkill, removeSkill } from './admin.js'
+import { ICONS, defaultSkills } from './skills.js'
 
 const $ = (s) => document.querySelector(s)
 $('#yr').textContent = new Date().getFullYear()
@@ -201,7 +202,7 @@ function buildGrid() {
     card.tabIndex = 0
     card.innerHTML = `
       <div class="view"><span class="loading">Loading…</span></div>
-      ${item.id ? '<button class="del" title="Delete this model" aria-label="Delete">🗑 Delete</button>' : ''}
+      <div class="card-tools"><button class="edit" aria-label="Edit">✎ Edit</button><button class="del" aria-label="Delete">🗑 Delete</button></div>
       <div class="cap"><div><b></b><small></small></div><span class="idx">${String(i + 1).padStart(2, '0')}</span></div>`
     card.querySelector('b').textContent = item.title
     card.querySelector('small').textContent = item.tag
@@ -212,6 +213,7 @@ function buildGrid() {
     card.addEventListener('pointerleave', () => { v.hover = false })
     card.addEventListener('click', () => showItem(item, { index: i }))
     card.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), showItem(item, { index: i })))
+    card.querySelector('.edit').addEventListener('click', (e) => { e.stopPropagation(); editModel(item) })
     card.querySelector('.del')?.addEventListener('click', async (e) => {
       e.stopPropagation()
       if (!confirm(`Delete "${item.title}" from your portfolio? This cannot be undone.`)) return
@@ -224,7 +226,8 @@ function buildGrid() {
 }
 async function refreshRemote() {
   const { models, hidden } = await fetchModels()
-  list = [...items.filter((it) => !hidden.includes(it.id)), ...models]
+  for (const o of models.filter((m) => m.override)) { const it = items.find((x) => x.id === o.id); if (it) { it.title = o.title; it.tag = o.tag } } // edits of built-in models
+  list = [...items.filter((it) => !hidden.includes(it.id)), ...models.filter((m) => !m.override)]
   buildGrid()
 }
 
@@ -366,7 +369,7 @@ document.querySelectorAll('.section-head, .contact > *, .skill, .step, .marquee'
 })
 buildGrid()
 refreshRemote()
-initAdmin({ openPreview, reload: refreshRemote, getProfile: () => ({ status: $('.status b').textContent, bio: bio.dataset.text, avatar: $('.avatar img').getAttribute('src') }), applyProfile })
+initAdmin({ openPreview, reload: refreshRemote, refreshSkills, getSkills: () => skills, getProfile: () => ({ status: $('.status b').textContent, bio: bio.dataset.text, avatar: $('.avatar img').getAttribute('src') }), applyProfile })
 
 /* typewriter intro */
 function type(el, text, speed, done) {
@@ -466,3 +469,32 @@ if (fine && !calm) {
   }, { passive: true })
   document.addEventListener('pointerleave', () => { glow.style.opacity = 0 })
 }
+
+/* ───────────── skills (editable) ───────────── */
+const skillGrid = $('#skill-grid')
+let skills = []
+function renderSkills() {
+  skillGrid.innerHTML = ''
+  skills.forEach((s, i) => {
+    const el = document.createElement('article')
+    el.className = 'skill fx reveal'
+    el.innerHTML = `<div class="ico">${ICONS[s.icon] || ICONS.cube}</div><b></b><p></p><span class="n">${String(i + 1).padStart(2, '0')}</span>
+      <div class="tools"><button class="mini" data-act="edit">✎ Edit</button><button class="mini danger" data-act="del">🗑 Delete</button></div>`
+    el.querySelector('b').textContent = s.title
+    el.querySelector('p').textContent = s.text
+    el.style.transitionDelay = (i % 4) * 90 + 'ms'
+    el.querySelector('[data-act=edit]').onclick = () => editSkill(s)
+    el.querySelector('[data-act=del]').onclick = () => removeSkill(s)
+    skillGrid.appendChild(el)
+    io.observe(el)
+  })
+}
+async function refreshSkills() {
+  const { skills: recs, hidden } = await fetchSkills()
+  const byId = new Map(recs.map((r) => [r.id, r]))
+  const base = defaultSkills.filter((d) => !hidden.includes(d.id)).map((d) => byId.get(d.id) || d) // edited built-ins keep their place
+  skills = [...base, ...recs.filter((r) => !defaultSkills.some((d) => d.id === r.id))]
+  renderSkills()
+}
+skills = [...defaultSkills]; renderSkills()
+refreshSkills()

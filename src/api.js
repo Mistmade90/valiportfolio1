@@ -32,3 +32,7 @@ export const deleteModel = (id) => api('/models?id=' + encodeURIComponent(id), {
 export async function fetchProfile() {
   try { return (await api('/profile')).profile } catch { return null }
 }
+
+export async function fetchSkills() {
+  try { const d = await api('/skills'); return { skills: d.skills || [], hidden: d.hidden || [] } } catch { return { skills: [], hidden: [] } }
+}

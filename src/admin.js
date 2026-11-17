@@ -1,4 +1,5 @@
 import { api, getToken, setToken } from './api.js'
+import { ICONS } from './skills.js'
 
 const $ = (s, r = document) => r.querySelector(s)
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
@@ -15,6 +16,7 @@ function dialog(html, { closable = true } = {}) {
   }
   return { el, close }
 }
+let app
 function toast(msg) {
   const t = document.createElement('div')
   t.className = 'toast'
@@ -24,7 +26,52 @@ function toast(msg) {
   setTimeout(() => t.remove(), 3200)
 }
 
-export function initAdmin(app) {
+export function editModel(item) {
+  const d = dialog(`
+    <h3>Edit project</h3>
+    <form class="form">
+      <label>Title<input name="title" maxlength="80" required value="${esc(item.title)}" /></label>
+      <label>Category<input name="tag" maxlength="40" value="${esc(item.tag || '')}" /></label>
+      <p class="err" hidden></p>
+      <div class="row"><button type="button" class="btn" data-close>Cancel</button><button class="btn primary">Save</button></div>
+    </form>`)
+  const f = $('form', d.el), err = $('.err', d.el), btn = $('.primary', d.el)
+  f.onsubmit = async (e) => {
+    e.preventDefault(); err.hidden = true; btn.disabled = true; btn.textContent = 'Saving…'
+    try { await api('/models/edit', { method: 'POST', json: { id: item.id, title: f.title.value, tag: f.tag.value } }); d.close(); toast('Project updated'); await app.reload() }
+    catch (ex) { err.textContent = ex.message; err.hidden = false; btn.disabled = false; btn.textContent = 'Save' }
+  }
+}
+
+export function editSkill(skill) {
+  const cur = skill || { title: '', text: '', icon: 'cube' }
+  const d = dialog(`
+    <h3>${skill ? 'Edit skill' : 'Add skill'}</h3>
+    <form class="form">
+      <label>Title<input name="title" maxlength="60" required value="${esc(cur.title)}" /></label>
+      <label>Description<textarea name="text" maxlength="300" style="min-height:90px">${esc(cur.text)}</textarea></label>
+      <label>Icon<div class="icon-pick">${Object.entries(ICONS).map(([k, svg]) => `<label class="ip"><input type="radio" name="icon" value="${k}" ${k === cur.icon ? 'checked' : ''} /><span>${svg}</span></label>`).join('')}</div></label>
+      <p class="err" hidden></p>
+      <div class="row"><button type="button" class="btn" data-close>Cancel</button><button class="btn primary">Save</button></div>
+    </form>`)
+  const f = $('form', d.el), err = $('.err', d.el), btn = $('.primary', d.el)
+  f.onsubmit = async (e) => {
+    e.preventDefault(); err.hidden = true; btn.disabled = true; btn.textContent = 'Saving…'
+    try {
+      await api('/skills', { method: 'POST', json: { id: skill?.id, title: f.title.value, text: f.text.value, icon: f.icon.value } })
+      d.close(); toast(skill ? 'Skill updated' : 'Skill added'); await app.refreshSkills()
+    } catch (ex) { err.textContent = ex.message; err.hidden = false; btn.disabled = false; btn.textContent = 'Save' }
+  }
+}
+
+export async function removeSkill(skill) {
+  if (!confirm(`Delete "${skill.title}"?`)) return
+  try { await api('/skills?id=' + encodeURIComponent(skill.id), { method: 'DELETE' }); toast('Skill deleted'); await app.refreshSkills() }
+  catch (ex) { alert(ex.message) }
+}
+
+export function initAdmin(appApi) {
+  app = appApi
   const loginBtn = $('#nav-login')
   const setAdmin = (on) => {
     document.body.classList.toggle('is-admin', on)
@@ -42,6 +89,7 @@ export function initAdmin(app) {
   $('#btn-add').onclick = showAdd
   $('#btn-pw').onclick = () => showPassword({ forced: false })
   $('#btn-profile').onclick = showProfile
+  $('#btn-add-skill').onclick = () => editSkill(null)
 
   async function shrink(file, max = 800) { // keep the picture small (fast page + fits Vercel's upload limit)
     try {
