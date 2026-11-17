@@ -8,6 +8,7 @@ import { makeDemo } from './demos.js'
 import { fetchModels, deleteModel, fetchProfile, fetchSkills } from './api.js'
 import { initAdmin, editModel, editSkill, removeSkill } from './admin.js'
 import { toast } from './ui.js'
+import { initClock } from './clock.js'
 import { ICONS, defaultSkills } from './skills.js'
 
 const $ = (s) => document.querySelector(s)
@@ -571,3 +572,5 @@ const spy = new IntersectionObserver((es) => es.forEach((e) => {
   if (e.isIntersecting) navLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id))
 }), { rootMargin: '-45% 0px -50% 0px' })
 navLinks.forEach((a) => { const s = document.querySelector(a.getAttribute('href')); if (s) spy.observe(s) })
+
+initClock()

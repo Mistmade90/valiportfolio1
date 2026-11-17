@@ -359,3 +359,35 @@ html { scroll-padding-top: 80px; }
 .idle .pill::after { animation-play-state: paused; }
 
 @media (min-width: 641px) { .bg-icons i:nth-child(n+10) { display: none; } }
+
+.nav nav { align-items: center; }
+.clock { position: relative; }
+.clock-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 99px; background: #0a0a0b; font-size: 12px; letter-spacing: .06em; text-transform: none; color: var(--fg); cursor: pointer; font-variant-numeric: tabular-nums; transition: border-color .25s; }
+.clock-btn:hover, .clock-btn[aria-expanded=true] { border-color: #666; }
+.clock-btn .clock-mood { font-size: 13px; opacity: .85; }
+.clock-btn .clock-hm { font-weight: 700; }
+.clock-btn .clock-sec { color: var(--mute); margin-left: -6px; min-width: 2.4ch; }
+.clock-btn small { color: var(--mute); font-size: 10px; letter-spacing: .14em; padding-left: 8px; border-left: 1px solid var(--line); }
+
+.clock-pop { position: absolute; right: 0; top: calc(100% + 12px); width: min(330px, calc(100vw - 32px)); padding: 16px; border: 1px solid var(--line); border-radius: 20px; background: #0b0b0cf5; box-shadow: 0 20px 60px #000c; text-transform: none; letter-spacing: 0; z-index: 25; animation: popin .2s ease-out; }
+.clock-pop[hidden] { display: none; }
+@keyframes popin { from { opacity: 0; transform: translateY(-6px); } }
+.clock-title { font-size: 11px; color: var(--mute); text-transform: uppercase; letter-spacing: .14em; margin: 2px 4px 12px; }
+.clock-title b { color: var(--fg); margin-left: 6px; }
+.clock-pop ul { list-style: none; display: grid; gap: 2px; max-height: min(60vh, 420px); overflow: auto; }
+.clock-pop li { display: grid; grid-template-columns: 22px 1fr auto auto; align-items: center; gap: 10px; padding: 10px 10px; border-radius: 12px; font-size: 13px; }
+.clock-pop li:first-child { background: #151517; }
+.clock-pop li.home { box-shadow: inset 0 0 0 1px #ffffff26; }
+.cz-ico { opacity: .8; text-align: center; }
+.cz-name small { display: block; color: var(--mute); font-size: 10px; margin-top: 2px; }
+.cz-diff { color: var(--mute); font-size: 10px; text-align: right; }
+.cz-time { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 5.5ch; text-align: right; }
+.clock-note { margin: 12px 4px 2px; font-size: 10px; color: var(--mute); }
+
+@media (max-width: 760px) {
+  .clock-btn .clock-sec, .clock-btn small { display: none; }
+  .clock-btn { padding: 7px 11px; }
+  .nav nav { gap: 12px; }
+  .nav nav a[href="#skills"] { display: none; }
+}
+@media (max-width: 480px) { .clock-btn .clock-mood { display: none; } }
