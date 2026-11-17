@@ -254,7 +254,6 @@ async function refreshRemote() {
   for (const o of models.filter((m) => m.override)) { const it = items.find((x) => x.id === o.id); if (it) { it.title = o.title; it.tag = o.tag } }
   list = [...items.filter((it) => !hidden.includes(it.id)), ...models.filter((m) => !m.override)]
   buildGrid()
-  setHeroModel()
   if (!hashChecked) { hashChecked = true; openFromHash() }
 }
 let hashChecked = false
@@ -392,16 +391,12 @@ addEventListener('keydown', (e) => {
 })
 
 let dirty = true
-let heroOn = true
-let heroOff = false
-let slowAcc = 0
 let lastMeasure = 0
-let lastDraw = 0
 let boostUntil = 0
 addEventListener("transitionrun", () => (boostUntil = performance.now() + 1000), true)
 let last = performance.now()
 let running = true
-document.addEventListener('visibilitychange', () => { running = !document.hidden; last = performance.now(); slowAcc = 0; if (running) requestAnimationFrame(tick) })
+document.addEventListener('visibilitychange', () => { running = !document.hidden; last = performance.now(); if (running) requestAnimationFrame(tick) })
 addEventListener('scroll', () => (dirty = true), { passive: true })
 addEventListener('resize', resize)
 resize()
@@ -409,13 +404,8 @@ resize()
 function tick(now) {
   if (!running) return
   requestAnimationFrame(tick)
-  const raw = now - last
-  const dt = Math.min(0.05, raw / 1000)
+  const dt = Math.min(0.05, (now - last) / 1000)
   last = now
-  if (heroOn && !heroOff && !modal.active) {
-    slowAcc = raw > 40 ? slowAcc + 1 : Math.max(0, slowAcc - 2)
-    if (slowAcc > 90) { heroOff = true; $('#hero-3d').hidden = true; dirty = true }
-  }
 
   if (modal.active) {
     controls.update()
@@ -427,7 +417,7 @@ function tick(now) {
 
   if (now < boostUntil) dirty = true
   const cardHover = views.some((v) => v.hover)
-  if (!dirty && !cardHover && (!heroOn || heroOff || now - lastDraw < 24)) return
+  if (!dirty && !cardHover) return
   const measure = dirty || now - lastMeasure > 400
   dirty = false
   if (measure) {
@@ -440,14 +430,12 @@ function tick(now) {
   }
 
   renderer.setScissor(0, 0, W, H); renderer.setViewport(0, 0, W, H); renderer.clear()
-  const ddt = Math.min(0.05, (now - lastDraw) / 1000)
   for (const v of views) {
-    if (v === modal || !v.visible || (v === hero && heroOff)) continue
+    if (v === modal || !v.visible) continue
     if (v.item && !v.ready) continue
-    v.onFrame?.(v.hover || v.alwaysOn ? ddt : 0, now / 1000)
+    v.onFrame?.(v.hover ? dt : 0, now / 1000)
     drawView(v)
   }
-  lastDraw = now
 }
 requestAnimationFrame(tick)
 
@@ -587,45 +575,6 @@ const spy = new IntersectionObserver((es) => es.forEach((e) => {
 navLinks.forEach((a) => { const s = document.querySelector(a.getAttribute('href')); if (s) spy.observe(s) })
 
 initClock()
-
-const pointer = { x: 0.5, y: 0.5 }
-addEventListener('pointermove', (e) => { pointer.x = e.clientX / innerWidth; pointer.y = e.clientY / innerHeight }, { passive: true })
-
-const hero = createView($('#hero-3d'), { fov: 26, dist: 4.1 })
-hero.alwaysOn = true
-const sun = new THREE.DirectionalLight(0xffffff, 2.2)
-sun.position.set(2.5, 3, 4)
-hero.scene.add(sun)
-const clay = new THREE.MeshStandardMaterial({ color: 0x6d6d6d, roughness: 0.55, metalness: 0, envMapIntensity: 0.9 })
-const heroWire = new THREE.MeshBasicMaterial({ color: 0xf2f2f2, wireframe: true })
-hero.scene.overrideMaterial = clay
-let heroSpin = 0
-hero.onFrame = (dt) => {
-  heroSpin += dt * 0.32
-  const ty = heroSpin + (pointer.x - 0.5) * 1.3, tx = (pointer.y - 0.5) * 0.45
-  const k = Math.min(1, dt * 3)
-  hero.pivot.rotation.y += (ty - hero.pivot.rotation.y) * k
-  hero.pivot.rotation.x += (tx - hero.pivot.rotation.x) * k
-}
-let heroId = null
-async function setHeroModel() {
-  const src = list[0] || { demo: 'knot', id: 'demo-knot' }
-  if (heroId === src.id) return
-  heroId = src.id
-  const obj = (await loadItem(src)).clone()
-  hero.pivot.clear()
-  hero.pivot.add(frameObject(obj, hero, 1.0))
-  dirty = true
-}
-setHeroModel()
-new IntersectionObserver((es) => { heroOn = es[0].isIntersecting; dirty = true }, { rootMargin: '60px' }).observe($('#hero'))
-addEventListener('keydown', (e) => {
-  if ((e.key !== 'w' && e.key !== 'W' && e.key !== 'z' && e.key !== 'Z') || e.ctrlKey || e.metaKey || e.altKey) return
-  if (modal.active || e.target.closest?.('input, textarea')) return
-  hero.scene.overrideMaterial = hero.scene.overrideMaterial === clay ? heroWire : clay
-  dirty = true
-})
-$('.hint-w')?.addEventListener('click', () => { hero.scene.overrideMaterial = hero.scene.overrideMaterial === clay ? heroWire : clay; dirty = true })
 
 const sideLabels = { hero: 'I — Intro', skills: 'II — Skills', work: 'III — Work', process: 'IV — Process', contact: 'V — Contact' }
 const sidenum = $('#sidenum')
