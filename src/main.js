@@ -218,7 +218,7 @@ function buildGrid() {
     card.className = 'card'
     card.tabIndex = 0
     card.innerHTML = `
-      <div class="view"><span class="vhud tl">Persp</span><span class="vhud tr">${String(i + 1).padStart(2, '0')}</span><span class="vhud bl tris"></span><span class="loading">Loading…</span></div>
+      <div class="view"><span class="vhud tl">Persp</span><span class="vhud tr">${String(i + 1).padStart(2, '0')}</span><span class="vhud bl tris"></span><span class="vhud br open">Open ↗</span><span class="loading">Loading…</span></div>
       <div class="card-tools"><button class="edit" aria-label="Edit">✎ Edit</button><button class="del" aria-label="Delete">🗑 Delete</button></div>
       <div class="cap"><div><b></b><small></small></div><span class="idx">${String(i + 1).padStart(2, '0')}</span></div>`
     card.querySelector('b').textContent = item.title
@@ -254,6 +254,7 @@ async function refreshRemote() {
   for (const o of models.filter((m) => m.override)) { const it = items.find((x) => x.id === o.id); if (it) { it.title = o.title; it.tag = o.tag } }
   list = [...items.filter((it) => !hidden.includes(it.id)), ...models.filter((m) => !m.override)]
   buildGrid()
+  setHeroModel()
   if (!hashChecked) { hashChecked = true; openFromHash() }
 }
 let hashChecked = false
@@ -290,8 +291,8 @@ controls.minDistance = 2
 controls.maxDistance = 9
 controls.addEventListener('change', () => (dirty = true))
 controls.enabled = false
-const wireMat = new THREE.MeshBasicMaterial({ color: 0xff6b1a, wireframe: true })
-const cardWire = new THREE.MeshBasicMaterial({ color: 0xff6b1a, wireframe: true, transparent: true, opacity: 0.85 })
+const wireMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true })
+const cardWire = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.85 })
 let current = -1
 let previewResolve = null
 
@@ -391,11 +392,16 @@ addEventListener('keydown', (e) => {
 })
 
 let dirty = true
+let heroOn = true
+let heroOff = false
+let slowAcc = 0
+let lastMeasure = 0
+let lastDraw = 0
 let boostUntil = 0
 addEventListener("transitionrun", () => (boostUntil = performance.now() + 1000), true)
 let last = performance.now()
 let running = true
-document.addEventListener('visibilitychange', () => { running = !document.hidden; last = performance.now(); if (running) requestAnimationFrame(tick) })
+document.addEventListener('visibilitychange', () => { running = !document.hidden; last = performance.now(); slowAcc = 0; if (running) requestAnimationFrame(tick) })
 addEventListener('scroll', () => (dirty = true), { passive: true })
 addEventListener('resize', resize)
 resize()
@@ -403,8 +409,13 @@ resize()
 function tick(now) {
   if (!running) return
   requestAnimationFrame(tick)
-  const dt = Math.min(0.05, (now - last) / 1000)
+  const raw = now - last
+  const dt = Math.min(0.05, raw / 1000)
   last = now
+  if (heroOn && !heroOff && !modal.active) {
+    slowAcc = raw > 40 ? slowAcc + 1 : Math.max(0, slowAcc - 2)
+    if (slowAcc > 90) { heroOff = true; $('#hero-3d').hidden = true; dirty = true }
+  }
 
   if (modal.active) {
     controls.update()
@@ -415,22 +426,28 @@ function tick(now) {
   }
 
   if (now < boostUntil) dirty = true
-  const hovering = views.some((v) => v.hover)
-  if (!dirty && !hovering) return
+  const cardHover = views.some((v) => v.hover)
+  if (!dirty && !cardHover && (!heroOn || heroOff || now - lastDraw < 24)) return
+  const measure = dirty || now - lastMeasure > 400
   dirty = false
-  for (const v of views) {
-    if (v === modal) continue
-    testVisible(v)
-    if (v.near && v.item && !v.requested) ensureLoaded(v)
+  if (measure) {
+    lastMeasure = now
+    for (const v of views) {
+      if (v === modal) continue
+      testVisible(v)
+      if (v.near && v.item && !v.requested) ensureLoaded(v)
+    }
   }
 
   renderer.setScissor(0, 0, W, H); renderer.setViewport(0, 0, W, H); renderer.clear()
+  const ddt = Math.min(0.05, (now - lastDraw) / 1000)
   for (const v of views) {
-    if (v === modal || !v.visible) continue
+    if (v === modal || !v.visible || (v === hero && heroOff)) continue
     if (v.item && !v.ready) continue
-    v.onFrame?.(v.hover || v.alwaysOn ? dt : 0, now / 1000)
+    v.onFrame?.(v.hover || v.alwaysOn ? ddt : 0, now / 1000)
     drawView(v)
   }
+  lastDraw = now
 }
 requestAnimationFrame(tick)
 
@@ -452,13 +469,13 @@ function type(el, text, speed, done) {
 }
 const bio = $('#bio')
 
-const STATUS_COLORS = [[/avail|open|online|free/i, '#3dff7a'], [/busy|closed|unavail|booked|full/i, '#ff5a5a'], [/away|brb|soon|later/i, '#ffc247']]
+const STATUS_COLORS = [[/avail|open|online|free/i, '#0a0a0a'], [/busy|closed|unavail|booked|full/i, '#8a8a8a'], [/away|brb|soon|later/i, '#5a5a5a']]
 function applyProfile(p, { instant = false } = {}) {
   if (!p) return
   if (p.avatar) $('.avatar img').src = p.avatar
   if (p.status) {
     $('.status b').textContent = p.status
-    $('.status').style.setProperty('--dot', (STATUS_COLORS.find(([re]) => re.test(p.status)) || [0, '#9aa0a6'])[1])
+    $('.status').style.setProperty('--dot', (STATUS_COLORS.find(([re]) => re.test(p.status)) || [0, '#0a0a0a'])[1])
   }
   if (p.bio) { bio.dataset.text = p.bio; if (instant) { clearInterval(bio._t); bio.textContent = p.bio } }
 }
@@ -531,6 +548,7 @@ if (fine && !calm) {
   }, { passive: true })
 }
 
+const roman = (n) => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][n] || String(n)
 const skillGrid = $('#skill-grid')
 let skills = []
 function renderSkills() {
@@ -538,7 +556,7 @@ function renderSkills() {
   skills.forEach((s, i) => {
     const el = document.createElement('article')
     el.className = 'skill reveal'
-    el.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span><h3></h3><p></p><div class="ico">${ICONS[s.icon] || ICONS.cube}</div>
+    el.innerHTML = `<span class="n">${roman(i + 1)}</span><h3></h3><p></p><div class="ico">${ICONS[s.icon] || ICONS.cube}</div>
       <div class="tools"><button class="mini" data-act="edit">✎ Edit</button><button class="mini danger" data-act="del">🗑 Delete</button></div>`
     el.querySelector('h3').textContent = s.title
     el.querySelector('p').textContent = s.text
@@ -569,3 +587,70 @@ const spy = new IntersectionObserver((es) => es.forEach((e) => {
 navLinks.forEach((a) => { const s = document.querySelector(a.getAttribute('href')); if (s) spy.observe(s) })
 
 initClock()
+
+const pointer = { x: 0.5, y: 0.5 }
+addEventListener('pointermove', (e) => { pointer.x = e.clientX / innerWidth; pointer.y = e.clientY / innerHeight }, { passive: true })
+
+const hero = createView($('#hero-3d'), { fov: 26, dist: 4.1 })
+hero.alwaysOn = true
+const sun = new THREE.DirectionalLight(0xffffff, 2.2)
+sun.position.set(2.5, 3, 4)
+hero.scene.add(sun)
+const clay = new THREE.MeshStandardMaterial({ color: 0x6d6d6d, roughness: 0.55, metalness: 0, envMapIntensity: 0.9 })
+const heroWire = new THREE.MeshBasicMaterial({ color: 0xf2f2f2, wireframe: true })
+hero.scene.overrideMaterial = clay
+let heroSpin = 0
+hero.onFrame = (dt) => {
+  heroSpin += dt * 0.32
+  const ty = heroSpin + (pointer.x - 0.5) * 1.3, tx = (pointer.y - 0.5) * 0.45
+  const k = Math.min(1, dt * 3)
+  hero.pivot.rotation.y += (ty - hero.pivot.rotation.y) * k
+  hero.pivot.rotation.x += (tx - hero.pivot.rotation.x) * k
+}
+let heroId = null
+async function setHeroModel() {
+  const src = list[0] || { demo: 'knot', id: 'demo-knot' }
+  if (heroId === src.id) return
+  heroId = src.id
+  const obj = (await loadItem(src)).clone()
+  hero.pivot.clear()
+  hero.pivot.add(frameObject(obj, hero, 1.0))
+  dirty = true
+}
+setHeroModel()
+new IntersectionObserver((es) => { heroOn = es[0].isIntersecting; dirty = true }, { rootMargin: '60px' }).observe($('#hero'))
+addEventListener('keydown', (e) => {
+  if ((e.key !== 'w' && e.key !== 'W' && e.key !== 'z' && e.key !== 'Z') || e.ctrlKey || e.metaKey || e.altKey) return
+  if (modal.active || e.target.closest?.('input, textarea')) return
+  hero.scene.overrideMaterial = hero.scene.overrideMaterial === clay ? heroWire : clay
+  dirty = true
+})
+$('.hint-w')?.addEventListener('click', () => { hero.scene.overrideMaterial = hero.scene.overrideMaterial === clay ? heroWire : clay; dirty = true })
+
+const sideLabels = { hero: 'I — Intro', skills: 'II — Skills', work: 'III — Work', process: 'IV — Process', contact: 'V — Contact' }
+const sidenum = $('#sidenum')
+const sideSpy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) sidenum.textContent = sideLabels[e.target.id] }), { rootMargin: '-45% 0px -50% 0px' })
+Object.keys(sideLabels).forEach((id) => { const el = document.getElementById(id); if (el) sideSpy.observe(el) })
+
+if (fine && !calm) {
+  const cur = document.createElement('div')
+  cur.className = 'cursor3d'
+  cur.innerHTML = '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="13" fill="none" stroke="#fff" stroke-width="3"/><circle cx="24" cy="24" r="13" fill="none" stroke="#8a8a8a" stroke-width="3" stroke-dasharray="6 6"/><path d="M24 3v13M24 32v13M3 24h13M32 24h13" stroke="#fff" stroke-width="2"/></svg><span></span>'
+  document.body.appendChild(cur)
+  const label = cur.querySelector('span')
+  let cx = -100, cy = -100, tx = -100, ty = -100, run = 0, mode = ''
+  const loop = () => {
+    cx += (tx - cx) * 0.24; cy += (ty - cy) * 0.24
+    cur.style.transform = `translate3d(${cx}px, ${cy}px, 0)`
+    run = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.3 ? requestAnimationFrame(loop) : 0
+  }
+  addEventListener('pointermove', (e) => {
+    tx = e.clientX; ty = e.clientY
+    if (!run) run = requestAnimationFrame(loop)
+    cur.classList.add('on')
+    const t = e.target
+    const next = t.closest?.('.modal-view') ? 'DRAG' : t.closest?.('.card') ? 'VIEW' : t.closest?.('a, button, input, textarea, label, .chips, .clock-btn') ? 'link' : ''
+    if (next !== mode) { mode = next; cur.dataset.mode = next; label.textContent = next === 'link' ? '' : next }
+  }, { passive: true })
+  document.addEventListener('pointerleave', () => cur.classList.remove('on'))
+}

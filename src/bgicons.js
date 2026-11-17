@@ -1,5 +1,9 @@
 const S = (body) => `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`
 const icons = {
+  arch: S('<path d="M12 44V20Q12 8 24 3Q36 8 36 20V44z"/><path d="M24 3V44M12 27H36M17 15v8M31 15v8"/>'),
+  cross: S('<path d="M24 3V45M13 15H35"/><path d="M24 3l-3 4h6zM13 15l3-3v6zM35 15l-3-3v6z"/>'),
+  dagger: S('<path d="M24 3l4.5 22L24 29l-4.5-4z"/><path d="M14 31h20M24 31v13M21 44h6"/>'),
+  crescent: S('<path d="M33 5A19 19 0 1 0 43 34 15 15 0 0 1 33 5z"/>'),
   cube: S('<path d="M24 5 41 14v20L24 43 7 34V14z"/><path d="M7 14l17 9 17-9M24 23v20"/>'),
   sphere: S('<circle cx="24" cy="24" r="18"/><ellipse cx="24" cy="24" rx="18" ry="7"/><ellipse cx="24" cy="24" rx="7" ry="18"/>'),
   torus: S('<ellipse cx="24" cy="24" rx="19" ry="12"/><ellipse cx="24" cy="24" rx="8" ry="4"/>'),
@@ -16,11 +20,9 @@ const icons = {
   grid: S('<path d="M6 16h36M6 24h36M6 32h36M16 6v36M24 6v36M32 6v36"/>'),
 }
 const layout = [
-  ['cube', 6, 12, 74, 26, 0], ['monkey', 88, 9, 82, 30, -6], ['gizmo', 78, 34, 62, 22, -3],
-  ['sphere', 4, 38, 58, 28, -9], ['camera', 90, 58, 70, 24, -12], ['mesh', 12, 64, 66, 27, -4],
-  ['torus', 70, 80, 76, 31, -15], ['cursor', 40, 4, 50, 20, -8], ['move', 54, 92, 54, 23, -2],
-  ['cone', 28, 86, 60, 29, -11], ['light', 94, 84, 56, 25, -7], ['rotate', 20, 28, 46, 21, -5],
-  ['cylinder', 60, 18, 52, 32, -13], ['grid', 47, 52, 56, 34, -10],
+  ['arch', 5, 14, 84, 30, 0], ['cross', 91, 12, 64, 26, -6], ['dagger', 83, 58, 72, 28, -3], ['crescent', 9, 62, 66, 27, -9],
+  ['cube', 47, 6, 56, 24, -12], ['monkey', 70, 30, 70, 29, -4], ['gizmo', 22, 40, 52, 22, -15],
+  ['camera', 90, 84, 60, 25, -2], ['sphere', 40, 90, 54, 28, -11], ['mesh', 60, 74, 56, 26, -7],
 ]
 const layer = document.createElement('div')
 layer.className = 'bg-icons'

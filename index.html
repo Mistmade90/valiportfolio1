@@ -3,21 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0f0e0c" />
+  <meta name="theme-color" content="#0a0a0a" />
   <title>Valithar — Blender &amp; Roblox Builder</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Valithar — Blender &amp; Roblox Builder" />
   <meta property="og:description" content="18 year old Blender modeler and Roblox Builder from Germany. Weapons, buildings and Star Wars projects." />
   <meta name="twitter:card" content="summary" />
   <meta name="description" content="18 year old Blender modeler and Roblox Builder from Germany. Weapons, buildings and Star Wars projects." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ff6b1a'/%3E%3Cpath d='M7 8h5l4 11 4-11h5l-7 17h-4z' fill='%230f0e0c'/%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ffffff'/%3E%3Cpath d='M7 8h5l4 11 4-11h5l-7 17h-4z' fill='%230a0a0a'/%3E%3C/svg%3E" />
+  <script>try{if(!sessionStorage.getItem('v-intro')){document.documentElement.classList.add('has-intro');sessionStorage.setItem('v-intro','1')}}catch(e){}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@1&family=Pirata+One&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@1&family=Pirata+One&display=swap" /></noscript>
 </head>
 <body>
   <noscript><p style="padding:24px;text-align:center">This portfolio needs JavaScript to show the 3D models.</p></noscript>
+  <div class="intro" id="intro" aria-hidden="true"><span>Valithar</span><small>Blender &amp; Roblox Builder</small><i></i></div>
   <div class="progress" id="progress"></div>
+  <div class="sidenum" id="sidenum" aria-hidden="true">I — Intro</div>
 
   <header class="nav">
     <a class="logo" href="#top">valithar<span>.blend</span></a>
@@ -36,7 +40,7 @@
   </header>
 
   <main id="top">
-    <section class="hero">
+    <section class="hero" id="hero">
       <div class="hud hud-top">
         <span>User Perspective</span>
         <span>(1) Collection | Valithar</span>
@@ -50,9 +54,12 @@
         </g>
       </svg>
 
+      <div class="name-wrap">
+      <div class="hero-3d" id="hero-3d" aria-hidden="true"></div>
       <h1 class="name" aria-label="Valithar">
         <span style="--i:0">V</span><span style="--i:1">A</span><span style="--i:2">L</span><span style="--i:3">I</span><span style="--i:4">T</span><span style="--i:5">H</span><span style="--i:6">A</span><span style="--i:7">R</span>
       </h1>
+      </div>
 
       <div class="hero-row">
         <div class="hero-copy">
@@ -72,10 +79,7 @@
         </div>
 
         <div class="avatar-wrap">
-          <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
-            <defs><path id="circ" d="M100,100 m-88,0 a88,88 0 1,1 176,0 a88,88 0 1,1 -176,0" /></defs>
-            <text><textPath href="#circ" textLength="545" lengthAdjust="spacing">BLENDER ✺ ROBLOX ✺ STAR WARS ✺ WEAPONS ✺ BUILDINGS ✺ </textPath></text>
-          </svg>
+          <svg class="ring" viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1"><circle cx="100" cy="100" r="99.2" stroke-width="1.4"/><circle cx="100" cy="100" r="74.5"/><circle cx="100" cy="100" r="71" stroke-width=".6"/><path d="M88.7 24.8Q85.6 13.2 100.0 7.0Q114.4 13.2 111.3 24.8M118.3 26.2Q119.9 14.3 135.6 14.1Q146.6 25.3 139.2 34.9M145.2 38.9Q151.2 28.4 165.8 34.2Q171.6 48.8 161.1 54.8M165.1 60.8Q174.7 53.4 185.9 64.4Q185.7 80.1 173.8 81.7M175.2 88.7Q186.8 85.6 193.0 100.0Q186.8 114.4 175.2 111.3M173.8 118.3Q185.7 119.9 185.9 135.6Q174.7 146.6 165.1 139.2M161.1 145.2Q171.6 151.2 165.8 165.8Q151.2 171.6 145.2 161.1M139.2 165.1Q146.6 174.7 135.6 185.9Q119.9 185.7 118.3 173.8M111.3 175.2Q114.4 186.8 100.0 193.0Q85.6 186.8 88.7 175.2M81.7 173.8Q80.1 185.7 64.4 185.9Q53.4 174.7 60.8 165.1M54.8 161.1Q48.8 171.6 34.2 165.8Q28.4 151.2 38.9 145.2M34.9 139.2Q25.3 146.6 14.1 135.6Q14.3 119.9 26.2 118.3M24.8 111.3Q13.2 114.4 7.0 100.0Q13.2 85.6 24.8 88.7M26.2 81.7Q14.3 80.1 14.1 64.4Q25.3 53.4 34.9 60.8M38.9 54.8Q28.4 48.8 34.2 34.2Q48.8 28.4 54.8 38.9M60.8 34.9Q53.4 25.3 64.4 14.1Q80.1 14.3 81.7 26.2"/><path d="M100.0 28.0L100.0 24.0M127.6 33.5L129.1 29.8M150.9 49.1L153.7 46.3M166.5 72.4L170.2 70.9M172.0 100.0L176.0 100.0M166.5 127.6L170.2 129.1M150.9 150.9L153.7 153.7M127.6 166.5L129.1 170.2M100.0 172.0L100.0 176.0M72.4 166.5L70.9 170.2M49.1 150.9L46.3 153.7M33.5 127.6L29.8 129.1M28.0 100.0L24.0 100.0M33.5 72.4L29.8 70.9M49.1 49.1L46.3 46.3M72.4 33.5L70.9 29.8" stroke-width=".7"/></g><g fill="currentColor"><circle cx="119.0" cy="4.7" r="1.3"/><circle cx="154.0" cy="19.2" r="1.3"/><circle cx="180.8" cy="46.0" r="1.3"/><circle cx="195.3" cy="81.0" r="1.3"/><circle cx="195.3" cy="119.0" r="1.3"/><circle cx="180.8" cy="154.0" r="1.3"/><circle cx="154.0" cy="180.8" r="1.3"/><circle cx="119.0" cy="195.3" r="1.3"/><circle cx="81.0" cy="195.3" r="1.3"/><circle cx="46.0" cy="180.8" r="1.3"/><circle cx="19.2" cy="154.0" r="1.3"/><circle cx="4.7" cy="119.0" r="1.3"/><circle cx="4.7" cy="81.0" r="1.3"/><circle cx="19.2" cy="46.0" r="1.3"/><circle cx="46.0" cy="19.2" r="1.3"/><circle cx="81.0" cy="4.7" r="1.3"/></g></svg>
           <div class="avatar" id="avatar">
             <img src="/profile.webp" alt="Valithar" width="400" height="400" decoding="async"
                  onerror="this.parentElement.classList.add('noimg')" onload="this.parentElement.classList.remove('noimg')" />
@@ -85,11 +89,11 @@
         </div>
       </div>
 
-      <div class="hud hud-bottom"><span id="hud-xy">X 0.00 · Y 0.00</span><span>Scroll ↓</span></div>
+      <div class="hud hud-bottom"><span id="hud-xy">X 0.00 · Y 0.00</span><span class="hint-w">[W] wireframe</span><span>Scroll ↓</span></div>
     </section>
 
     <div class="tape marquee" aria-hidden="true">
-      <div class="track"><span>Blender</span><i>✺</i><span>Roblox</span><i>✺</i><span>Weapons</span><i>✺</i><span>Buildings</span><i>✺</i><span>Star Wars</span><i>✺</i><span>3D Modeling</span><i>✺</i><span>Blender</span><i>✺</i><span>Roblox</span><i>✺</i><span>Weapons</span><i>✺</i><span>Buildings</span><i>✺</i><span>Star Wars</span><i>✺</i><span>3D Modeling</span><i>✺</i></div>
+      <div class="track"><span>Blender</span><i>✠</i><span>Roblox</span><i>✠</i><span>Weapons</span><i>✠</i><span>Buildings</span><i>✠</i><span>Star Wars</span><i>✠</i><span>3D Modeling</span><i>✠</i><span>Blender</span><i>✠</i><span>Roblox</span><i>✠</i><span>Weapons</span><i>✠</i><span>Buildings</span><i>✠</i><span>Star Wars</span><i>✠</i><span>3D Modeling</span><i>✠</i></div>
     </div>
 
     <section id="skills" class="skills">
@@ -107,17 +111,21 @@
       <div class="grid" id="grid"></div>
     </section>
 
-    <section class="process">
+    <section class="process" id="process">
       <div class="section-head"><h2>Your game, <em>my models</em></h2><p>How it works</p></div>
       <div class="steps">
-        <div class="step"><span class="num">Step 01</span><b>Say hi</b><p>Contact me on Discord or Roblox.</p></div>
-        <div class="step"><span class="num">Step 02</span><b>Share your idea</b><p>Tell me what you need: a weapon, a building or a whole set.</p></div>
-        <div class="step"><span class="num">Step 03</span><b>Get your models</b><p>I model it in Blender and deliver it, ready for your game.</p></div>
+        <div class="step"><span class="num">Step I</span><b>Say hi</b><p>Contact me on Discord or Roblox.</p></div>
+        <div class="step"><span class="num">Step II</span><b>Share your idea</b><p>Tell me what you need: a weapon, a building or a whole set.</p></div>
+        <div class="step"><span class="num">Step III</span><b>Get your models</b><p>I model it in Blender and deliver it, ready for your game.</p></div>
       </div>
     </section>
 
+    <div class="tape dark marquee" aria-hidden="true">
+      <div class="track rev"><span>Let's work together</span><i>✠</i><span>Say hi</span><i>✠</i><span>Let's work together</span><i>✠</i><span>Say hi</span><i>✠</i><span>Let's work together</span><i>✠</i><span>Say hi</span><i>✠</i><span>Let's work together</span><i>✠</i><span>Say hi</span><i>✠</i></div>
+    </div>
+
     <section id="contact" class="contact">
-      <p class="eyebrow">Got a project?</p>
+      <p class="eyebrow">✠ Got a project?</p>
       <h2 class="big">Let's make it <em>3D.</em></h2>
       <div class="socials">
         <a href="#" id="discord" title="Click to copy">Discord <span>rough4574</span></a>
@@ -126,6 +134,8 @@
     </section>
 
     <button class="totop" id="totop" aria-label="Back to top">↑</button>
+
+    <div class="orn" aria-hidden="true"><span>✠</span></div>
 
     <footer>
       <span>© <span id="yr"></span> Valithar</span>
