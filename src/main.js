@@ -360,7 +360,10 @@ function tick(now) {
 }
 requestAnimationFrame(tick)
 
-document.querySelectorAll('.section-head, .contact > *').forEach((el) => { el.classList.add('reveal'); io.observe(el) })
+document.querySelectorAll('.section-head, .contact > *, .skill, .step, .marquee').forEach((el, i) => {
+  el.classList.add('reveal'); io.observe(el)
+  if (el.matches('.skill, .step')) el.style.transitionDelay = (i % 4) * 90 + 'ms'
+})
 buildGrid()
 refreshRemote()
 initAdmin({ openPreview, reload: refreshRemote, getProfile: () => ({ status: $('.status b').textContent, bio: bio.dataset.text, avatar: $('.avatar img').getAttribute('src') }), applyProfile })
@@ -402,3 +405,64 @@ $('#discord')?.addEventListener('click', (e) => {
   el.textContent = 'Copied ✓'
   setTimeout(() => (el.textContent = old), 1500)
 })
+
+/* ───────────── extra polish (cheap: transforms/opacity only) ───────────── */
+const fine = matchMedia('(hover: hover) and (pointer: fine)').matches
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+// scroll progress bar
+const bar = $('#progress')
+let ticking = false
+addEventListener('scroll', () => {
+  if (ticking) return
+  ticking = true
+  requestAnimationFrame(() => {
+    const max = document.documentElement.scrollHeight - innerHeight
+    bar.style.transform = `scaleX(${max > 0 ? Math.min(1, scrollY / max) : 0})`
+    ticking = false
+  })
+}, { passive: true })
+
+// count-up numbers (30+, 2+, 100%)
+const countIO = new IntersectionObserver((es) => es.forEach((e) => {
+  if (!e.isIntersecting) return
+  countIO.unobserve(e.target)
+  const m = e.target.textContent.match(/^(\d+)(.*)$/)
+  if (!m || calm) return
+  const to = +m[1], t0 = performance.now()
+  const step = (now) => {
+    const k = Math.min(1, (now - t0) / 1400)
+    e.target.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))) + m[2]
+    if (k < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}), { threshold: 0.6 })
+document.querySelectorAll('.stats b').forEach((b) => countIO.observe(b))
+
+if (fine && !calm) {
+  // soft light that follows the mouse
+  const glow = document.createElement('div')
+  glow.className = 'glow'
+  document.body.prepend(glow)
+  let gx = innerWidth / 2, gy = innerHeight / 3, tx = gx, ty = gy, raf = 0
+  const loop = () => {
+    gx += (tx - gx) * 0.12; gy += (ty - gy) * 0.12
+    glow.style.transform = `translate3d(${gx - 300}px, ${gy - 300}px, 0)`
+    raf = Math.abs(tx - gx) + Math.abs(ty - gy) > 0.5 ? requestAnimationFrame(loop) : 0
+  }
+  // spotlight on cards + avatar tilt (one shared listener)
+  const avatar = $('#avatar')
+  addEventListener('pointermove', (e) => {
+    tx = e.clientX; ty = e.clientY
+    if (!raf) raf = requestAnimationFrame(loop)
+    glow.style.opacity = 1
+    const fx = e.target.closest?.('.fx, .card')
+    if (fx) { const r = fx.getBoundingClientRect(); fx.style.setProperty('--mx', e.clientX - r.left + 'px'); fx.style.setProperty('--my', e.clientY - r.top + 'px') }
+    if (avatar) {
+      const r = avatar.getBoundingClientRect()
+      const dx = (e.clientX - (r.left + r.width / 2)) / innerWidth, dy = (e.clientY - (r.top + r.height / 2)) / innerHeight
+      avatar.style.transform = `perspective(900px) rotateY(${dx * 14}deg) rotateX(${-dy * 14}deg)`
+    }
+  }, { passive: true })
+  document.addEventListener('pointerleave', () => { glow.style.opacity = 0 })
+}
