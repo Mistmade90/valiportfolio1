@@ -1,4 +1,3 @@
-// Storage adapter: local disk in dev, Vercel Blob in production (when BLOB_READ_WRITE_TOKEN is set).
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
@@ -40,11 +39,10 @@ function fsStorage() {
 
 async function blobStorage() {
   const { put, list, del } = await import('@vercel/blob')
-  const priv = (name) => name.startsWith('private/') // never exposed: random suffix → unguessable URL
+  const priv = (name) => name.startsWith('private/')
   return {
     mode: 'blob',
     async readJson(name) {
-      // real errors must surface (never pretend the file is empty, or a later write would wipe it)
       const { blobs } = await list({ prefix: name.replace(/\.json$/, '') })
       const mine = blobs.filter((b) => b.pathname.endsWith('.json')).sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
       if (!mine.length) return null
@@ -61,7 +59,6 @@ async function blobStorage() {
         if (old.length) await del(old)
       }
     },
-    // one small file per record → no read-modify-write races, no stale overwrites
     async putJson(rel, obj) {
       await put(rel, JSON.stringify(obj), { access: 'public', contentType: 'application/json', addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 60 })
     },

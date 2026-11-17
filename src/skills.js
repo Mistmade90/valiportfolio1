@@ -1,4 +1,3 @@
-// Icons you can pick for a skill (48x48 line icons)
 const S = (b) => `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${b}</svg>`
 export const ICONS = {
   weapon: S('<circle cx="24" cy="24" r="12"/><path d="M24 4v10M24 34v10M4 24h10M34 24h10"/><circle cx="24" cy="24" r="2" fill="currentColor"/>'),
@@ -15,7 +14,6 @@ export const ICONS = {
   camera: S('<rect x="5" y="14" width="26" height="20" rx="3"/><path d="M31 21l12-6v18l-12-6z"/>'),
 }
 
-// Built-in skills. Edit/delete them on the site once you are logged in.
 export const defaultSkills = [
   { id: 'static-weapons', title: 'Weapons', icon: 'weapon', text: 'Detailed hard-surface weapons modeled in Blender, ready to drop into your game.' },
   { id: 'static-buildings', title: 'Buildings', icon: 'building', text: 'From small structures to full buildings and environments with a clean, believable look.' },

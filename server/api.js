@@ -1,9 +1,8 @@
-// Tiny API: login, password change, list / add / delete models. Works as Vite dev middleware and as Vercel function.
 import crypto from 'node:crypto'
 import { getStorage } from './storage.js'
 
 const DEFAULT_USER = 'Vali'
-const DEFAULT_PASS = 'Vali123456' // first-run only; forced to change after first login
+const DEFAULT_PASS = 'Vali123456'
 const AUTH = 'private/auth.json'
 const MODELS = 'models.json'
 const DAY = 86400e3
@@ -135,7 +134,7 @@ export async function handle(req, res) {
         if (!TEX_EXT.includes(ext(av.name)) || av.size > 5 * 1024 * 1024) return json(res, 400, { error: 'Profile picture must be png/jpg/webp/gif and under 5 MB.' })
         rec.avatar = await store.putFile(`profile/${ts}.${ext(av.name)}`, Buffer.from(await av.arrayBuffer()))
       }
-      await store.putJson(`profile/${ts}.json`, rec) // new file each save → never overwritten, never stale
+      await store.putJson(`profile/${ts}.json`, rec)
       for (const o of old) if (o.updated) await store.delJson(`profile/${o.updated}.json`).catch(() => {})
       return json(res, 200, { profile: rec })
     }
@@ -150,7 +149,7 @@ export async function handle(req, res) {
       let created = Date.now()
       if (id) {
         if (!/^[a-z0-9-]+$/.test(id)) return json(res, 400, { error: 'Bad id.' })
-        created = (await store.getJson(`skills/${id}.json`))?.created ?? 0 // editing keeps its place
+        created = (await store.getJson(`skills/${id}.json`))?.created ?? 0
       } else id = (title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'skill') + '-' + crypto.randomBytes(3).toString('hex')
       const rec = { id, title, text, icon, created }
       await store.putJson(`skills/${id}.json`, rec)
@@ -174,7 +173,7 @@ export async function handle(req, res) {
       if (!title) return json(res, 400, { error: 'Please enter a title.' })
       const cur = await store.getJson(`records/${id}.json`)
       if (cur) await store.putJson(`records/${id}.json`, { ...cur, title, tag })
-      else if (id.startsWith('static-')) await store.putJson(`records/${id}.json`, { id, title, tag, override: true, created: 0 }) // built-in model: store only the changes
+      else if (id.startsWith('static-')) await store.putJson(`records/${id}.json`, { id, title, tag, override: true, created: 0 })
       else return json(res, 404, { error: 'Model not found.' })
       return json(res, 200, { ok: true })
     }
@@ -205,13 +204,13 @@ export async function handle(req, res) {
     if (route === '/models' && method === 'DELETE') {
       const id = url.searchParams.get('id') || ''
       if (!/^[a-z0-9-]+$/.test(id)) return json(res, 400, { error: 'Bad id.' })
-      if (id.startsWith('static-')) { // built-in model from models.js: can't delete the file, so hide it
+      if (id.startsWith('static-')) {
         await store.putJson(`hidden/${id}.json`, { id })
         await store.delJson(`records/${id}.json`)
         return json(res, 200, { ok: true })
       }
       await store.delJson(`records/${id}.json`)
-      const legacy = await store.readJson(MODELS) // older installs kept everything in models.json
+      const legacy = await store.readJson(MODELS)
       if (legacy?.models?.some((m) => m.id === id)) { legacy.models = legacy.models.filter((m) => m.id !== id); await store.writeJson(MODELS, legacy) }
       await store.deleteDir(`models/${id}`)
       return json(res, 200, { ok: true })

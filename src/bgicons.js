@@ -1,4 +1,3 @@
-// Floating Blender-style line icons in the background (pure SVG + CSS transforms → almost free)
 const S = (body) => `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`
 const icons = {
   cube: S('<path d="M24 5 41 14v20L24 43 7 34V14z"/><path d="M7 14l17 9 17-9M24 23v20"/>'),
@@ -16,7 +15,6 @@ const icons = {
   monkey: S('<ellipse cx="24" cy="26" rx="13" ry="12"/><circle cx="9" cy="22" r="5"/><circle cx="39" cy="22" r="5"/><circle cx="19" cy="23" r="2"/><circle cx="29" cy="23" r="2"/><path d="M19 33c3 2 7 2 10 0"/>'),
   grid: S('<path d="M6 16h36M6 24h36M6 32h36M16 6v36M24 6v36M32 6v36"/>'),
 }
-// [icon, left%, top%, size px, duration s, delay s]
 const layout = [
   ['cube', 6, 12, 74, 26, 0], ['monkey', 88, 9, 82, 30, -6], ['gizmo', 78, 34, 62, 22, -3],
   ['sphere', 4, 38, 58, 28, -9], ['camera', 90, 58, 70, 24, -12], ['mesh', 12, 64, 66, 27, -4],

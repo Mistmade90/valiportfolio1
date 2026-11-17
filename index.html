@@ -5,10 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#000000" />
   <title>Valithar — Blender &amp; Roblox Builder</title>
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Valithar — Blender &amp; Roblox Builder" />
+  <meta property="og:description" content="18 year old Blender modeler and Roblox Builder from Germany. Weapons, buildings and Star Wars projects." />
+  <meta name="twitter:card" content="summary" />
   <meta name="description" content="18 year old Blender modeler and Roblox Builder from Germany. Weapons, buildings and Star Wars projects." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M16 5 27 11v10L16 27 5 21V11z' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E" />
 </head>
 <body>
+  <noscript><p style="padding:24px;text-align:center">This portfolio needs JavaScript to show the 3D models.</p></noscript>
   <div class="progress" id="progress"></div>
   <header class="nav">
     <a class="logo" href="#top">Valithar</a>
@@ -73,6 +78,7 @@
         <p><span id="count">00</span> · click to explore</p>
         <div class="admin-actions"><button class="btn primary" id="btn-add">+ Add model</button><button class="btn" id="btn-pw">Password</button></div>
       </div>
+      <div class="chips" id="chips"></div>
       <div class="grid" id="grid"></div>
     </section>
 
@@ -92,14 +98,16 @@
       </div>
     </section>
 
+    <button class="totop" id="totop" aria-label="Back to top">↑</button>
+
     <footer><div class="bigname" aria-hidden="true">VALITHAR</div><p>© <span id="yr"></span> Valithar — Blender &amp; Roblox Builder</p></footer>
   </main>
 
-  <!-- modal: backdrop + view sit UNDER the shared canvas, UI sits above it -->
   <div class="modal-bg" id="modal-bg" hidden>
     <div class="view modal-view" id="modal-view"></div>
   </div>
   <div class="modal-ui" id="modal-ui" hidden>
+    <div class="m-loading" id="m-loading"><i></i>Loading model…</div>
     <div class="m-top">
       <div>
         <p class="eyebrow" id="m-tag"></p>
@@ -116,6 +124,9 @@
       </div>
       <div class="m-actions">
         <button id="m-prev" aria-label="Previous">←</button>
+        <button id="m-share">Copy link</button>
+        <button id="m-reset">Reset view</button>
+        <button id="m-full">Fullscreen</button>
         <button id="m-wire">Wireframe</button>
         <button id="m-rot" class="on">Auto-rotate</button>
         <button id="m-next" aria-label="Next">→</button>

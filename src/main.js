@@ -7,12 +7,12 @@ import { items } from './models.js'
 import { makeDemo } from './demos.js'
 import { fetchModels, deleteModel, fetchProfile, fetchSkills } from './api.js'
 import { initAdmin, editModel, editSkill, removeSkill } from './admin.js'
+import { toast } from './ui.js'
 import { ICONS, defaultSkills } from './skills.js'
 
 const $ = (s) => document.querySelector(s)
 $('#yr').textContent = new Date().getFullYear()
 
-/* ───────────── ONE shared renderer / canvas for every viewport ───────────── */
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
 renderer.toneMapping = THREE.ACESFilmicToneMapping
 renderer.toneMappingExposure = 1.0
@@ -33,7 +33,6 @@ function resize() {
   dirty = true
 }
 
-/* ───────────── views ───────────── */
 const views = []
 function createView(el, { fov = 32, dist = 4.2 } = {}) {
   const scene = new THREE.Scene()
@@ -48,7 +47,6 @@ function createView(el, { fov = 32, dist = 4.2 } = {}) {
 }
 
 function frameObject(obj, view, margin = 1.15) {
-  // normalise to ~2 units, centred at origin
   const box = new THREE.Box3().setFromObject(obj)
   const size = box.getSize(new THREE.Vector3())
   const center = box.getCenter(new THREE.Vector3())
@@ -79,7 +77,6 @@ function drawView(v) {
   renderer.render(v.scene, v.camera)
 }
 
-/* ───────────── model loading (lazy) ───────────── */
 let gltfLoaderPromise
 function getLoader() {
   return (gltfLoaderPromise ??= Promise.all([
@@ -92,13 +89,10 @@ function getLoader() {
   }))
 }
 
-// OBJ support: optional `mtl` (material file) and `color` per item in models.js
 const baseName = (p) => p.replace(/\\/g, '/').split('/').pop()
 const safeName = (n) => n.replace(/[\\/:*?"<>|]/g, '_')
 const absUrl = (u) => new URL(u, location.href).href
 
-// Keeps only texture lines whose image really exists (a missing texture would render BLACK).
-// Textures are looked up by file name next to the .mtl (or in item.texMap for previews).
 async function resolveMtl(item) {
   const text = await (await fetch(item.mtl)).text()
   const dir = item.mtl.replace(/[^/]*$/, '')
@@ -119,7 +113,6 @@ async function resolveMtl(item) {
   return out.join('\n')
 }
 
-// MTL gives Phong materials, which ignore our environment light → convert to PBR so they are lit.
 function toStandard(m) {
   if (!m || !m.isMeshPhongMaterial) return m
   const std = new THREE.MeshStandardMaterial({
@@ -184,18 +177,41 @@ async function loadItem(item) {
   return item.loading
 }
 
-/* reveal on scroll */
 const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && (e.target.classList.add('in'), io.unobserve(e.target))), { threshold: 0.12 })
 
-/* ───────────── grid cards ───────────── */
-// built-in models get a stable id so they can be hidden (deleted) from the admin UI too
 items.forEach((it) => { it.id ??= 'static-' + it.src.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-') })
-let list = [...items] // static models (models.js) + uploaded ones (API)
+let list = [...items]
 const grid = $('#grid')
+const chips = $('#chips')
+let activeTag = ''
+function applyFilter() {
+  const cards = grid.children
+  let shown = 0
+  list.forEach((it, i) => {
+    const on = !activeTag || it.tag === activeTag
+    cards[i].hidden = !on
+    shown += on
+  })
+  $('#count').textContent = String(shown).padStart(2, '0') + (shown === 1 ? ' model' : ' models')
+  chips.querySelectorAll('button').forEach((b) => b.classList.toggle('on', (b.dataset.tag || '') === activeTag))
+  dirty = true
+}
+function buildChips() {
+  const tags = [...new Set(list.map((i) => i.tag).filter(Boolean))]
+  if (!tags.includes(activeTag)) activeTag = ''
+  chips.hidden = tags.length < 2
+  chips.innerHTML = ''
+  for (const t of ['', ...tags]) {
+    const b = document.createElement('button')
+    b.dataset.tag = t
+    b.textContent = t || 'All'
+    b.onclick = () => { activeTag = t; applyFilter() }
+    chips.appendChild(b)
+  }
+}
 function buildGrid() {
   for (let k = views.length - 1; k >= 0; k--) if (views[k].item) views.splice(k, 1)
   grid.innerHTML = ''
-  $('#count').textContent = String(list.length).padStart(2, '0') + ' models'
   list.forEach((item, i) => {
     const card = document.createElement('article')
     card.className = 'card'
@@ -222,13 +238,21 @@ function buildGrid() {
     v.onFrame = (dt) => { v.pivot.rotation.y += dt * (v.hover ? 1.4 : 0.25) }
     card.classList.add('reveal'); io.observe(card)
   })
-  dirty = true
+  buildChips()
+  applyFilter()
 }
 async function refreshRemote() {
   const { models, hidden } = await fetchModels()
-  for (const o of models.filter((m) => m.override)) { const it = items.find((x) => x.id === o.id); if (it) { it.title = o.title; it.tag = o.tag } } // edits of built-in models
+  for (const o of models.filter((m) => m.override)) { const it = items.find((x) => x.id === o.id); if (it) { it.title = o.title; it.tag = o.tag } }
   list = [...items.filter((it) => !hidden.includes(it.id)), ...models.filter((m) => !m.override)]
   buildGrid()
+  if (!hashChecked) { hashChecked = true; openFromHash() }
+}
+let hashChecked = false
+function openFromHash() {
+  const m = location.hash.match(/^#model\/([a-z0-9-]+)$/)
+  const i = m ? list.findIndex((it) => it.id === m[1]) : -1
+  if (i >= 0) showItem(list[i], { index: i })
 }
 
 async function ensureLoaded(v) {
@@ -243,7 +267,6 @@ async function ensureLoaded(v) {
   dirty = true
 }
 
-/* ───────────── modal ───────────── */
 const modalBg = $('#modal-bg'), modalUi = $('#modal-ui')
 const modal = createView($('#modal-view'), { fov: 32, dist: 4.6 })
 modal.active = false
@@ -260,37 +283,71 @@ const wireMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true }
 let current = -1
 let previewResolve = null
 
+let showToken = 0
+let pushed = false
+const modeLoading = $('#m-loading')
+
 async function showItem(item, { index = -1, preview = false } = {}) {
+  const token = ++showToken
   current = index
-  const obj = (await loadItem(item)).clone()
   modal.pivot.clear()
-  const wrap = frameObject(obj, modal, 1.0)
-  modal.pivot.add(wrap)
-  modal.camera.position.set(0, 0.5, 4.6)
-  controls.target.set(0, 0, 0)
-  controls.update()
   modal.scene.overrideMaterial = null
   $('#m-wire').classList.remove('on')
   $('#m-title').textContent = item.title
   $('#m-tag').textContent = item.tag
-  const s = item.stats
-  $('#m-stats').innerHTML = `<span><b>${s.tris.toLocaleString('en')}</b> tris</span><span><b>${s.verts.toLocaleString('en')}</b> verts</span><span><b>${s.meshes}</b> meshes</span>` + (item.note ? `<span>${item.note}</span>` : '')
+  $('#m-stats').innerHTML = ''
   modalUi.classList.toggle('preview', preview)
+  modalUi.classList.toggle('no-share', preview || !item.id)
+  modeLoading.hidden = false
   modalBg.hidden = modalUi.hidden = false
   document.body.classList.add('modal-open')
   modal.active = true
+  controls.enabled = false
+  dirty = true
+  if (!preview && item.id) {
+    const url = '#model/' + item.id
+    if (location.hash.startsWith('#model/')) history.replaceState(null, '', url)
+    else { history.pushState(null, '', url); pushed = true }
+  }
+  const obj = (await loadItem(item)).clone()
+  if (token !== showToken || !modal.active) return
+  const wrap = frameObject(obj, modal, 1.0)
+  modal.pivot.add(wrap)
+  resetView()
+  const s = item.stats
+  $('#m-stats').innerHTML = `<span><b>${s.tris.toLocaleString('en')}</b> tris</span><span><b>${s.verts.toLocaleString('en')}</b> verts</span><span><b>${s.meshes}</b> meshes</span>` + (item.note ? `<span>${item.note}</span>` : '')
+  modeLoading.hidden = true
   controls.enabled = true
   dirty = true
 }
+function resetView() {
+  modal.camera.position.set(0, 0.5, 4.6)
+  controls.target.set(0, 0, 0)
+  controls.update()
+  dirty = true
+}
 function closeModal() {
+  showToken++
   if (previewResolve) { const r = previewResolve; previewResolve = null; r(false) }
   modal.active = false
   controls.enabled = false
   modalBg.hidden = modalUi.hidden = true
   document.body.classList.remove('modal-open')
   modal.pivot.clear()
+  if (document.fullscreenElement) document.exitFullscreen?.()
   dirty = true
 }
+function requestClose() {
+  if (!modal.active) return
+  if (!previewResolve && location.hash.startsWith('#model/')) {
+    if (pushed) { pushed = false; history.back() }
+    else { history.replaceState(null, '', location.pathname + location.search); closeModal() }
+  } else closeModal()
+}
+addEventListener('popstate', () => {
+  if (modal.active && !previewResolve) { pushed = false; closeModal() }
+  else if (!modal.active) openFromHash()
+})
 const step = (d) => { if (previewResolve || current < 0) return; const i = (current + d + list.length) % list.length; showItem(list[i], { index: i }) }
 function openPreview(item) {
   return new Promise((resolve, reject) => {
@@ -299,8 +356,13 @@ function openPreview(item) {
   })
 }
 $('#m-cancel').onclick = closeModal
+$('#m-reset').onclick = resetView
+$('#m-full').onclick = () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.())
+$('#m-share').onclick = async () => {
+  try { await navigator.clipboard.writeText(location.href); toast('Link copied') } catch { toast('Copy the link from the address bar') }
+}
 $('#m-ok').onclick = () => { const r = previewResolve; previewResolve = null; closeModal(); r?.(true) }
-$('#m-close').onclick = closeModal
+$('#m-close').onclick = requestClose
 $('#m-prev').onclick = () => step(-1)
 $('#m-next').onclick = () => step(1)
 $('#m-wire').onclick = (e) => {
@@ -311,12 +373,11 @@ $('#m-wire').onclick = (e) => {
 $('#m-rot').onclick = (e) => { controls.autoRotate = !controls.autoRotate; e.currentTarget.classList.toggle('on') }
 addEventListener('keydown', (e) => {
   if (!modal.active) return
-  if (e.key === 'Escape') closeModal()
+  if (e.key === 'Escape' && !document.fullscreenElement) requestClose()
   if (e.key === 'ArrowLeft') step(-1)
   if (e.key === 'ArrowRight') step(1)
 })
 
-/* ───────────── render loop (only does work when needed) ───────────── */
 let dirty = true
 let boostUntil = 0
 addEventListener("transitionrun", () => (boostUntil = performance.now() + 1000), true)
@@ -333,7 +394,6 @@ function tick(now) {
   const dt = Math.min(0.05, (now - last) / 1000)
   last = now
 
-  // modal open → render ONLY the modal (huge saving)
   if (modal.active) {
     controls.update()
     modal.rect = modal.el.getBoundingClientRect()
@@ -371,7 +431,6 @@ buildGrid()
 refreshRemote()
 initAdmin({ openPreview, reload: refreshRemote, refreshSkills, getSkills: () => skills, getProfile: () => ({ status: $('.status b').textContent, bio: bio.dataset.text, avatar: $('.avatar img').getAttribute('src') }), applyProfile })
 
-/* typewriter intro */
 function type(el, text, speed, done) {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = text; done?.(); return }
   let i = 0
@@ -383,7 +442,6 @@ function type(el, text, speed, done) {
 }
 const bio = $('#bio')
 
-/* editable profile (picture, status, description) */
 const STATUS_COLORS = [[/avail|open|online|free/i, '#3dff7a'], [/busy|closed|unavail|booked|full/i, '#ff5a5a'], [/away|brb|soon|later/i, '#ffc247']]
 function applyProfile(p, { instant = false } = {}) {
   if (!p) return
@@ -400,7 +458,6 @@ const profileReady = fetchProfile().then((p) => { profile = p; applyProfile(p) }
 const bioText = () => bio.dataset.text
 type($('#name'), 'Valithar', 110, () => Promise.race([profileReady, new Promise((r) => setTimeout(r, 1500))]).then(() => setTimeout(() => type(bio, bioText(), 14), 150)))
 
-/* click-to-copy Discord name */
 $('#discord')?.addEventListener('click', (e) => {
   e.preventDefault()
   navigator.clipboard?.writeText('rough4574')
@@ -409,11 +466,9 @@ $('#discord')?.addEventListener('click', (e) => {
   setTimeout(() => (el.textContent = old), 1500)
 })
 
-/* ───────────── extra polish (cheap: transforms/opacity only) ───────────── */
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches
 
-// scroll progress bar
 const bar = $('#progress')
 let ticking = false
 addEventListener('scroll', () => {
@@ -426,7 +481,6 @@ addEventListener('scroll', () => {
   })
 }, { passive: true })
 
-// count-up numbers (30+, 2+, 100%)
 const countIO = new IntersectionObserver((es) => es.forEach((e) => {
   if (!e.isIntersecting) return
   countIO.unobserve(e.target)
@@ -443,7 +497,6 @@ const countIO = new IntersectionObserver((es) => es.forEach((e) => {
 document.querySelectorAll('.stats b').forEach((b) => countIO.observe(b))
 
 if (fine && !calm) {
-  // soft light that follows the mouse
   const glow = document.createElement('div')
   glow.className = 'glow'
   document.body.prepend(glow)
@@ -453,7 +506,6 @@ if (fine && !calm) {
     glow.style.transform = `translate3d(${gx - 300}px, ${gy - 300}px, 0)`
     raf = Math.abs(tx - gx) + Math.abs(ty - gy) > 0.5 ? requestAnimationFrame(loop) : 0
   }
-  // spotlight on cards + avatar tilt (one shared listener)
   const avatar = $('#avatar')
   addEventListener('pointermove', (e) => {
     tx = e.clientX; ty = e.clientY
@@ -470,7 +522,6 @@ if (fine && !calm) {
   document.addEventListener('pointerleave', () => { glow.style.opacity = 0 })
 }
 
-/* ───────────── skills (editable) ───────────── */
 const skillGrid = $('#skill-grid')
 let skills = []
 function renderSkills() {
@@ -492,9 +543,19 @@ function renderSkills() {
 async function refreshSkills() {
   const { skills: recs, hidden } = await fetchSkills()
   const byId = new Map(recs.map((r) => [r.id, r]))
-  const base = defaultSkills.filter((d) => !hidden.includes(d.id)).map((d) => byId.get(d.id) || d) // edited built-ins keep their place
+  const base = defaultSkills.filter((d) => !hidden.includes(d.id)).map((d) => byId.get(d.id) || d)
   skills = [...base, ...recs.filter((r) => !defaultSkills.some((d) => d.id === r.id))]
   renderSkills()
 }
 skills = [...defaultSkills]; renderSkills()
 refreshSkills()
+
+const totop = $('#totop')
+addEventListener('scroll', () => totop.classList.toggle('show', scrollY > 700), { passive: true })
+totop.onclick = () => scrollTo({ top: 0, behavior: calm ? 'auto' : 'smooth' })
+
+const navLinks = [...document.querySelectorAll('.nav nav a[href^="#"]')]
+const spy = new IntersectionObserver((es) => es.forEach((e) => {
+  if (e.isIntersecting) navLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id))
+}), { rootMargin: '-45% 0px -50% 0px' })
+navLinks.forEach((a) => { const s = document.querySelector(a.getAttribute('href')); if (s) spy.observe(s) })

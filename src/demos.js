@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 
-// Procedural placeholder models so the site looks great before you add your own .glb files.
 export function makeDemo(kind) {
   const g = new THREE.Group()
   const mesh = (geo, mat) => new THREE.Mesh(geo, mat)

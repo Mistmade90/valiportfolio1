@@ -1,5 +1,6 @@
 import { api, getToken, setToken } from './api.js'
 import { ICONS } from './skills.js'
+import { toast } from './ui.js'
 
 const $ = (s, r = document) => r.querySelector(s)
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
@@ -9,22 +10,17 @@ function dialog(html, { closable = true } = {}) {
   el.className = 'dlg'
   el.innerHTML = `<div class="dlg-box" role="dialog">${html}</div>`
   document.body.appendChild(el)
-  const close = () => el.remove()
+  const onKey = (e) => e.key === 'Escape' && close()
+  const close = () => { removeEventListener('keydown', onKey); el.remove() }
   if (closable) {
     el.addEventListener('pointerdown', (e) => e.target === el && close())
     el.querySelectorAll('[data-close]').forEach((b) => (b.onclick = close))
+    addEventListener('keydown', onKey)
   }
+  el.querySelector('input:not([type=file]):not([type=radio]), textarea')?.focus()
   return { el, close }
 }
 let app
-function toast(msg) {
-  const t = document.createElement('div')
-  t.className = 'toast'
-  t.textContent = msg
-  document.body.appendChild(t)
-  setTimeout(() => t.classList.add('out'), 2600)
-  setTimeout(() => t.remove(), 3200)
-}
 
 export function editModel(item) {
   const d = dialog(`
@@ -79,7 +75,6 @@ export function initAdmin(appApi) {
   }
   setAdmin(false)
 
-  // restore session
   if (getToken()) api('/me').then((d) => { if (d.mustChange) showPassword({ forced: true }); else setAdmin(true) }).catch(() => setToken(''))
 
   loginBtn.onclick = () => {
@@ -91,7 +86,7 @@ export function initAdmin(appApi) {
   $('#btn-profile').onclick = showProfile
   $('#btn-add-skill').onclick = () => editSkill(null)
 
-  async function shrink(file, max = 800) { // keep the picture small (fast page + fits Vercel's upload limit)
+  async function shrink(file, max = 800) {
     try {
       const bmp = await createImageBitmap(file)
       const k = Math.min(1, max / Math.max(bmp.width, bmp.height))
@@ -228,7 +223,7 @@ export function initAdmin(appApi) {
       let ok = false
       try { ok = await app.openPreview(item) }
       catch (ex) { err.textContent = 'Could not read the model: ' + ex.message; err.hidden = false; d.el.style.display = ''; urls.forEach(URL.revokeObjectURL); return }
-      if (!ok) { d.el.style.display = ''; urls.forEach(URL.revokeObjectURL); return } // Cancel → back to the form
+      if (!ok) { d.el.style.display = ''; urls.forEach(URL.revokeObjectURL); return }
 
       const btn = $('.primary', d.el)
       d.el.style.display = ''
