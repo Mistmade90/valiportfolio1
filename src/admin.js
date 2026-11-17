@@ -34,7 +34,7 @@ export function editModel(item) {
   const f = $('form', d.el), err = $('.err', d.el), btn = $('.primary', d.el)
   f.onsubmit = async (e) => {
     e.preventDefault(); err.hidden = true; btn.disabled = true; btn.textContent = 'Saving…'
-    try { await api('/models/edit', { method: 'POST', json: { id: item.id, title: f.title.value, tag: f.tag.value } }); d.close(); toast('Project updated'); await app.reload() }
+    try { await api('/edit-model', { method: 'POST', json: { id: item.id, title: f.title.value, tag: f.tag.value } }); d.close(); toast('Project updated'); await app.reload() }
     catch (ex) { err.textContent = ex.message; err.hidden = false; btn.disabled = false; btn.textContent = 'Save' }
   }
 }

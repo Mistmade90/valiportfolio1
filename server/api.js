@@ -164,7 +164,7 @@ export async function handle(req, res) {
       return json(res, 200, { ok: true })
     }
 
-    if (route === '/models/edit' && method === 'POST') {
+    if (route === '/edit-model' && method === 'POST') {
       const b = await readJson(req)
       const id = String(b.id || '')
       if (!/^[a-z0-9-]+$/.test(id)) return json(res, 400, { error: 'Bad id.' })
