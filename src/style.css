@@ -327,3 +327,35 @@ html { scroll-padding-top: 80px; }
 .m-loading i { width: 18px; height: 18px; border: 2px solid #ffffff30; border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
 .modal-ui.no-share #m-share { display: none; }
 .modal-ui.preview #m-reset, .modal-ui.preview #m-full { display: none; }
+
+.nav { background: #000000e6; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.totop { -webkit-backdrop-filter: none; backdrop-filter: none; background: #000000d9; }
+.avatar { transform-style: flat; }
+.bg-icons i { will-change: auto; }
+
+.status b::before { box-shadow: none; animation: none; }
+.status b::after { content: ""; position: absolute; left: 0; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; color: var(--dot, #3dff7a); background: currentColor; animation: pingr 1.8s ease-out infinite; }
+@keyframes pingr { from { transform: scale(1); opacity: .7; } to { transform: scale(3.6); opacity: 0; } }
+
+.scrolling .bg-icons i,
+.scrolling .track,
+.scrolling .avatar::before,
+.scrolling .avatar::after,
+.scrolling .status,
+.scrolling .status i,
+.scrolling .status b::after,
+.scrolling .pill i,
+.scrolling .pill::after { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) { .status b::after { animation: none; opacity: 0; } }
+
+.idle .track,
+.idle .avatar::before,
+.idle .avatar::after,
+.idle .status,
+.idle .status i,
+.idle .status b::after,
+.idle .pill i,
+.idle .pill::after { animation-play-state: paused; }
+
+@media (min-width: 641px) { .bg-icons i:nth-child(n+10) { display: none; } }

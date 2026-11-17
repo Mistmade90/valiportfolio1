@@ -28,7 +28,7 @@ const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
 let W = 0, H = 0
 function resize() {
   W = innerWidth; H = innerHeight
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75))
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5))
   renderer.setSize(W, H)
   dirty = true
 }
@@ -402,16 +402,15 @@ function tick(now) {
     return
   }
 
-  let animating = false
+  if (now < boostUntil) dirty = true
+  const hovering = views.some((v) => v.hover)
+  if (!dirty && !hovering) return
+  dirty = false
   for (const v of views) {
     if (v === modal) continue
     testVisible(v)
     if (v.near && v.item && !v.requested) ensureLoaded(v)
-    if (v.visible && (v.alwaysOn || v.hover)) animating = true
   }
-  if (now < boostUntil) dirty = true
-  if (!animating && !dirty) return
-  dirty = false
 
   renderer.setScissor(0, 0, W, H); renderer.setViewport(0, 0, W, H); renderer.clear()
   for (const v of views) {
@@ -469,14 +468,22 @@ $('#discord')?.addEventListener('click', (e) => {
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches
 
+const offscreen = new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('idle', !e.isIntersecting)), { rootMargin: '80px' })
+document.querySelectorAll('.hero, .marquee').forEach((el) => offscreen.observe(el))
 const bar = $('#progress')
+let docMax = 0
+new ResizeObserver(() => { docMax = document.documentElement.scrollHeight - innerHeight }).observe(document.body)
+addEventListener('resize', () => { docMax = document.documentElement.scrollHeight - innerHeight })
 let ticking = false
+let scrollTimer = 0
 addEventListener('scroll', () => {
+  document.body.classList.add('scrolling')
+  clearTimeout(scrollTimer)
+  scrollTimer = setTimeout(() => document.body.classList.remove('scrolling'), 160)
   if (ticking) return
   ticking = true
   requestAnimationFrame(() => {
-    const max = document.documentElement.scrollHeight - innerHeight
-    bar.style.transform = `scaleX(${max > 0 ? Math.min(1, scrollY / max) : 0})`
+    bar.style.transform = `scaleX(${docMax > 0 ? Math.min(1, scrollY / docMax) : 0})`
     ticking = false
   })
 }, { passive: true })
@@ -507,17 +514,22 @@ if (fine && !calm) {
     raf = Math.abs(tx - gx) + Math.abs(ty - gy) > 0.5 ? requestAnimationFrame(loop) : 0
   }
   const avatar = $('#avatar')
-  addEventListener('pointermove', (e) => {
-    tx = e.clientX; ty = e.clientY
-    if (!raf) raf = requestAnimationFrame(loop)
-    glow.style.opacity = 1
-    const fx = e.target.closest?.('.fx, .card')
-    if (fx) { const r = fx.getBoundingClientRect(); fx.style.setProperty('--mx', e.clientX - r.left + 'px'); fx.style.setProperty('--my', e.clientY - r.top + 'px') }
-    if (avatar) {
+  let px = 0, py = 0, ptarget = null, pframe = 0
+  const applyPointer = () => {
+    pframe = 0
+    const fx = ptarget?.closest?.('.fx, .card')
+    if (fx) { const r = fx.getBoundingClientRect(); fx.style.setProperty('--mx', px - r.left + 'px'); fx.style.setProperty('--my', py - r.top + 'px') }
+    if (avatar && scrollY < innerHeight) {
       const r = avatar.getBoundingClientRect()
-      const dx = (e.clientX - (r.left + r.width / 2)) / innerWidth, dy = (e.clientY - (r.top + r.height / 2)) / innerHeight
+      const dx = (px - (r.left + r.width / 2)) / innerWidth, dy = (py - (r.top + r.height / 2)) / innerHeight
       avatar.style.transform = `perspective(900px) rotateY(${dx * 14}deg) rotateX(${-dy * 14}deg)`
     }
+  }
+  addEventListener('pointermove', (e) => {
+    tx = px = e.clientX; ty = py = e.clientY; ptarget = e.target
+    if (!raf) raf = requestAnimationFrame(loop)
+    glow.style.opacity = 1
+    if (!pframe) pframe = requestAnimationFrame(applyPointer)
   }, { passive: true })
   document.addEventListener('pointerleave', () => { glow.style.opacity = 0 })
 }
