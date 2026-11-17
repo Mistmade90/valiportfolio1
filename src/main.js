@@ -632,25 +632,3 @@ const sidenum = $('#sidenum')
 const sideSpy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) sidenum.textContent = sideLabels[e.target.id] }), { rootMargin: '-45% 0px -50% 0px' })
 Object.keys(sideLabels).forEach((id) => { const el = document.getElementById(id); if (el) sideSpy.observe(el) })
 
-if (fine && !calm) {
-  const cur = document.createElement('div')
-  cur.className = 'cursor3d'
-  cur.innerHTML = '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="13" fill="none" stroke="#fff" stroke-width="3"/><circle cx="24" cy="24" r="13" fill="none" stroke="#8a8a8a" stroke-width="3" stroke-dasharray="6 6"/><path d="M24 3v13M24 32v13M3 24h13M32 24h13" stroke="#fff" stroke-width="2"/></svg><span></span>'
-  document.body.appendChild(cur)
-  const label = cur.querySelector('span')
-  let cx = -100, cy = -100, tx = -100, ty = -100, run = 0, mode = ''
-  const loop = () => {
-    cx += (tx - cx) * 0.24; cy += (ty - cy) * 0.24
-    cur.style.transform = `translate3d(${cx}px, ${cy}px, 0)`
-    run = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.3 ? requestAnimationFrame(loop) : 0
-  }
-  addEventListener('pointermove', (e) => {
-    tx = e.clientX; ty = e.clientY
-    if (!run) run = requestAnimationFrame(loop)
-    cur.classList.add('on')
-    const t = e.target
-    const next = t.closest?.('.modal-view') ? 'DRAG' : t.closest?.('.card') ? 'VIEW' : t.closest?.('a, button, input, textarea, label, .chips, .clock-btn') ? 'link' : ''
-    if (next !== mode) { mode = next; cur.dataset.mode = next; label.textContent = next === 'link' ? '' : next }
-  }, { passive: true })
-  document.addEventListener('pointerleave', () => cur.classList.remove('on'))
-}

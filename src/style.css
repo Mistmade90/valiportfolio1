@@ -371,15 +371,6 @@ html.has-intro .intro { display: grid; position: fixed; inset: 0; z-index: 200; 
 html.has-intro .name span { animation-delay: calc(var(--i) * 60ms + 1.55s); }
 @media (prefers-reduced-motion: reduce) { html.has-intro .intro { display: none; } }
 
-/* ===== blender 3D cursor ===== */
-.cursor3d { position: fixed; left: -24px; top: -24px; width: 48px; height: 48px; z-index: 150; pointer-events: none; opacity: 0; transition: opacity .2s; will-change: transform; }
-.cursor3d.on { opacity: 1; }
-.cursor3d svg { width: 100%; height: 100%; display: block; transition: transform .25s cubic-bezier(.2,.8,.2,1); filter: drop-shadow(0 1px 2px #000a); }
-.cursor3d[data-mode=link] svg { transform: scale(.55) rotate(45deg); }
-.cursor3d[data-mode=VIEW] svg, .cursor3d[data-mode=DRAG] svg { transform: scale(1.5); }
-.cursor3d span { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 3px 7px; background: var(--orange); color: #0a0a0a; font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .12em; opacity: 0; transition: opacity .15s; }
-.cursor3d[data-mode=VIEW] span, .cursor3d[data-mode=DRAG] span { opacity: 1; }
-
 /* ===== section index on the left edge ===== */
 .sidenum { position: fixed; left: 14px; top: 50%; z-index: 20; writing-mode: vertical-rl; transform: translateY(-50%) rotate(180deg); font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--mute); mix-blend-mode: difference; pointer-events: none; }
 .modal-open .sidenum { display: none; }
@@ -394,8 +385,7 @@ html.has-intro .name span { animation-delay: calc(var(--i) * 60ms + 1.55s); }
 /* ===== card details ===== */
 .vhud.br { bottom: 14px; right: 14px; color: var(--orange); opacity: 0; transform: translateX(-6px); transition: opacity .2s, transform .2s; }
 .card:hover .vhud.br { opacity: 1; transform: none; }
-.card .view { cursor: none; }
-@media (hover: none) { .card .view { cursor: auto; } .vhud.br { opacity: 1; transform: none; } }
+@media (hover: none) { .vhud.br { opacity: 1; transform: none; } }
 
 @media (max-width: 760px) {
   .hero-3d { left: 20%; top: -60%; bottom: -30%; }
@@ -467,3 +457,43 @@ h2 em { font-size: 1.12em; line-height: .8; }
 @media (min-width: 900px) { .hero-row { align-items: center; } }
 
 .skills em { color: #0a0a0a; }
+
+/* ===== dark-first: no large white areas ===== */
+:root { --fg: #d9d9d9; --mute: #7c7c7c; }
+.name span { color: #121212; -webkit-text-stroke: 2px #c4c4c4; paint-order: stroke fill; }
+@media (hover: hover) { .name span:hover { color: #ffffff; -webkit-text-stroke-color: #ffffff; transform: translateY(-4%) skewX(-5deg); } }
+
+.skills { --ink: #d9d9d9; --paper: #101010; background: #101010; color: #d9d9d9; border-top: 2px solid #d9d9d9; margin-top: 0; }
+.skills .section-head p { color: #777; }
+.skills em { color: #ffffff; }
+.skill p { color: #9a9a9a; }
+.skill:hover { background: #1c1c1c; color: #ffffff; padding-left: 34px; }
+.skill:hover p { color: #d0d0d0; }
+.skill:hover .n { color: #ffffff; }
+.skills .btn.primary { background: #d9d9d9; color: #0a0a0a; border-color: #d9d9d9; box-shadow: 4px 4px 0 #3a3a3a; }
+.mini { background: #101010; color: #d9d9d9; border-color: #8a8a8a; }
+.mini:hover, .mini.danger:hover { background: #d9d9d9; color: #0a0a0a; }
+
+.tape { background: #121212; color: #d9d9d9; border-block: 2px solid #d9d9d9; box-shadow: none; }
+.tape.dark { background: #0a0a0a; color: #d9d9d9; border-block: 2px solid #d9d9d9; }
+.tape.dark .track span { color: transparent; -webkit-text-stroke: 1.5px #d9d9d9; }
+
+.contact { background: #0a0a0a; color: #d9d9d9; border-top: 2px solid #d9d9d9; }
+.contact .eyebrow { color: #8a8a8a; }
+.contact .big em { color: #ffffff; }
+.socials a { background: transparent; border: 2px solid #d9d9d9; box-shadow: none; color: #d9d9d9; }
+.socials a span { color: #ffffff; }
+.socials a:hover { background: #d9d9d9; color: #0a0a0a; box-shadow: none; transform: translate(-3px, -3px); }
+.socials a:hover span { color: #0a0a0a; }
+
+html.has-intro .intro { background: #0a0a0a; color: #d9d9d9; }
+.intro i { background: #d9d9d9; }
+
+.btn.primary { background: #d9d9d9; border-color: #d9d9d9; }
+.card { border-color: #7c7c7c; }
+.card:hover, .card:focus-visible { border-color: #d9d9d9; }
+.tags span:first-child { background: #d9d9d9; }
+.status { background: #d9d9d9; }
+.toast { background: #d9d9d9; }
+.stats { border-top-color: #7c7c7c; }
+.avatar { border-color: #8a8a8a; }
