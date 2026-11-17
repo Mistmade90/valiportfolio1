@@ -218,7 +218,7 @@ function buildGrid() {
     card.className = 'card'
     card.tabIndex = 0
     card.innerHTML = `
-      <div class="view"><span class="loading">Loading…</span></div>
+      <div class="view"><span class="vhud tl">Persp</span><span class="vhud tr">${String(i + 1).padStart(2, '0')}</span><span class="vhud bl tris"></span><span class="loading">Loading…</span></div>
       <div class="card-tools"><button class="edit" aria-label="Edit">✎ Edit</button><button class="del" aria-label="Delete">🗑 Delete</button></div>
       <div class="cap"><div><b></b><small></small></div><span class="idx">${String(i + 1).padStart(2, '0')}</span></div>`
     card.querySelector('b').textContent = item.title
@@ -226,8 +226,8 @@ function buildGrid() {
     grid.appendChild(card)
     const v = createView(card.querySelector('.view'), { fov: 30, dist: 4.4 })
     v.item = item
-    card.addEventListener('pointerenter', () => { v.hover = true; dirty = true })
-    card.addEventListener('pointerleave', () => { v.hover = false })
+    card.addEventListener('pointerenter', () => { v.hover = true; v.scene.overrideMaterial = cardWire; dirty = true })
+    card.addEventListener('pointerleave', () => { v.hover = false; v.scene.overrideMaterial = null; dirty = true })
     card.addEventListener('click', () => showItem(item, { index: i }))
     card.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), showItem(item, { index: i })))
     card.querySelector('.edit').addEventListener('click', (e) => { e.stopPropagation(); editModel(item) })
@@ -239,6 +239,13 @@ function buildGrid() {
     v.onFrame = (dt) => { v.pivot.rotation.y += dt * (v.hover ? 1.4 : 0.25) }
     card.classList.add('reveal'); io.observe(card)
   })
+  if (list.length < 3) {
+    const slot = document.createElement('div')
+    slot.className = 'slot'
+    slot.innerHTML = `<span class="vhud tl">Persp</span><div class="slot-body"><div class="bar"><i></i></div><b>Next model</b><small>Rendering…</small><button class="btn primary admin-only">+ Add model</button></div>`
+    slot.querySelector('button').addEventListener('click', () => $('#btn-add').click())
+    grid.appendChild(slot)
+  }
   buildChips()
   applyFilter()
 }
@@ -264,6 +271,9 @@ async function ensureLoaded(v) {
   v.pivot.add(wrap)
   v.pivot.rotation.y = Math.random() * 6
   v.el.querySelector('.loading')?.remove()
+  const t = v.item.stats.tris
+  const tris = v.el.querySelector('.tris')
+  if (tris) tris.textContent = (t >= 1000 ? (t / 1000).toFixed(1) + 'K' : t) + ' tris'
   v.ready = true
   dirty = true
 }
@@ -280,7 +290,8 @@ controls.minDistance = 2
 controls.maxDistance = 9
 controls.addEventListener('change', () => (dirty = true))
 controls.enabled = false
-const wireMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true })
+const wireMat = new THREE.MeshBasicMaterial({ color: 0xff6b1a, wireframe: true })
+const cardWire = new THREE.MeshBasicMaterial({ color: 0xff6b1a, wireframe: true, transparent: true, opacity: 0.85 })
 let current = -1
 let previewResolve = null
 
@@ -425,7 +436,6 @@ requestAnimationFrame(tick)
 
 document.querySelectorAll('.section-head, .contact > *, .skill, .step, .marquee').forEach((el, i) => {
   el.classList.add('reveal'); io.observe(el)
-  if (el.matches('.skill, .step')) el.style.transitionDelay = (i % 4) * 90 + 'ms'
 })
 buildGrid()
 refreshRemote()
@@ -456,7 +466,7 @@ let profile = null
 const profileReady = fetchProfile().then((p) => { profile = p; applyProfile(p) })
 
 const bioText = () => bio.dataset.text
-type($('#name'), 'Valithar', 110, () => Promise.race([profileReady, new Promise((r) => setTimeout(r, 1500))]).then(() => setTimeout(() => type(bio, bioText(), 14), 150)))
+Promise.race([profileReady, new Promise((r) => setTimeout(r, 1500))]).then(() => setTimeout(() => type(bio, bioText(), 14), 700))
 
 $('#discord')?.addEventListener('click', (e) => {
   e.preventDefault()
@@ -504,35 +514,21 @@ const countIO = new IntersectionObserver((es) => es.forEach((e) => {
 }), { threshold: 0.6 })
 document.querySelectorAll('.stats b').forEach((b) => countIO.observe(b))
 
+const hudXY = $('#hud-xy')
+const gizmo = $('#gizmo')
 if (fine && !calm) {
-  const glow = document.createElement('div')
-  glow.className = 'glow'
-  document.body.prepend(glow)
-  let gx = innerWidth / 2, gy = innerHeight / 3, tx = gx, ty = gy, raf = 0
-  const loop = () => {
-    gx += (tx - gx) * 0.12; gy += (ty - gy) * 0.12
-    glow.style.transform = `translate3d(${gx - 300}px, ${gy - 300}px, 0)`
-    raf = Math.abs(tx - gx) + Math.abs(ty - gy) > 0.5 ? requestAnimationFrame(loop) : 0
-  }
-  const avatar = $('#avatar')
-  let px = 0, py = 0, ptarget = null, pframe = 0
-  const applyPointer = () => {
-    pframe = 0
-    const fx = ptarget?.closest?.('.fx, .card')
-    if (fx) { const r = fx.getBoundingClientRect(); fx.style.setProperty('--mx', px - r.left + 'px'); fx.style.setProperty('--my', py - r.top + 'px') }
-    if (avatar && scrollY < innerHeight) {
-      const r = avatar.getBoundingClientRect()
-      const dx = (px - (r.left + r.width / 2)) / innerWidth, dy = (py - (r.top + r.height / 2)) / innerHeight
-      avatar.style.transform = `perspective(900px) rotateY(${dx * 14}deg) rotateX(${-dy * 14}deg)`
-    }
+  let hx = 0, hy = 0, hframe = 0
+  const paint = () => {
+    hframe = 0
+    hudXY.textContent = `X ${(hx * 2 - 1).toFixed(2)} · Y ${(1 - hy * 2).toFixed(2)}`
+    gizmo.style.setProperty('--gx', (hx - 0.5) * 14 + 'px')
+    gizmo.style.setProperty('--gy', (hy - 0.5) * 14 + 'px')
   }
   addEventListener('pointermove', (e) => {
-    tx = px = e.clientX; ty = py = e.clientY; ptarget = e.target
-    if (!raf) raf = requestAnimationFrame(loop)
-    glow.style.opacity = 1
-    if (!pframe) pframe = requestAnimationFrame(applyPointer)
+    if (scrollY > innerHeight) return
+    hx = e.clientX / innerWidth; hy = e.clientY / innerHeight
+    if (!hframe) hframe = requestAnimationFrame(paint)
   }, { passive: true })
-  document.addEventListener('pointerleave', () => { glow.style.opacity = 0 })
 }
 
 const skillGrid = $('#skill-grid')
@@ -541,12 +537,11 @@ function renderSkills() {
   skillGrid.innerHTML = ''
   skills.forEach((s, i) => {
     const el = document.createElement('article')
-    el.className = 'skill fx reveal'
-    el.innerHTML = `<div class="ico">${ICONS[s.icon] || ICONS.cube}</div><b></b><p></p><span class="n">${String(i + 1).padStart(2, '0')}</span>
+    el.className = 'skill reveal'
+    el.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span><h3></h3><p></p><div class="ico">${ICONS[s.icon] || ICONS.cube}</div>
       <div class="tools"><button class="mini" data-act="edit">✎ Edit</button><button class="mini danger" data-act="del">🗑 Delete</button></div>`
-    el.querySelector('b').textContent = s.title
+    el.querySelector('h3').textContent = s.title
     el.querySelector('p').textContent = s.text
-    el.style.transitionDelay = (i % 4) * 90 + 'ms'
     el.querySelector('[data-act=edit]').onclick = () => editSkill(s)
     el.querySelector('[data-act=del]').onclick = () => removeSkill(s)
     skillGrid.appendChild(el)

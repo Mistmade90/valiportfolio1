@@ -3,20 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#0f0e0c" />
   <title>Valithar — Blender &amp; Roblox Builder</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Valithar — Blender &amp; Roblox Builder" />
   <meta property="og:description" content="18 year old Blender modeler and Roblox Builder from Germany. Weapons, buildings and Star Wars projects." />
   <meta name="twitter:card" content="summary" />
   <meta name="description" content="18 year old Blender modeler and Roblox Builder from Germany. Weapons, buildings and Star Wars projects." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M16 5 27 11v10L16 27 5 21V11z' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ff6b1a'/%3E%3Cpath d='M7 8h5l4 11 4-11h5l-7 17h-4z' fill='%230f0e0c'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap" />
 </head>
 <body>
   <noscript><p style="padding:24px;text-align:center">This portfolio needs JavaScript to show the 3D models.</p></noscript>
   <div class="progress" id="progress"></div>
+
   <header class="nav">
-    <a class="logo" href="#top">Valithar</a>
+    <a class="logo" href="#top">valithar<span>.blend</span></a>
     <nav>
       <a href="#skills">Skills</a>
       <a href="#work">Projects</a>
@@ -33,54 +37,69 @@
 
   <main id="top">
     <section class="hero">
-      <div class="hero-left">
-        <div class="avatar" id="avatar">
-          <img src="/profile.webp" alt="Valithar" width="400" height="400" decoding="async"
-               onerror="this.parentElement.classList.add('noimg')" onload="this.parentElement.classList.remove('noimg')" />
-          <span class="initial">V</span>
-          <div class="status"><i>♛</i><div><small>Status</small><b>Available</b></div></div>
+      <div class="hud hud-top">
+        <span>User Perspective</span>
+        <span>(1) Collection | Valithar</span>
+      </div>
+
+      <svg class="gizmo" id="gizmo" viewBox="0 0 90 90" aria-hidden="true">
+        <g class="gz">
+          <line x1="45" y1="45" x2="76" y2="45" /><line x1="45" y1="45" x2="45" y2="14" /><line x1="45" y1="45" x2="26" y2="64" />
+          <circle class="x" cx="76" cy="45" r="8" /><circle class="y" cx="45" cy="14" r="8" /><circle class="z" cx="26" cy="64" r="8" />
+          <text x="76" y="48.5">X</text><text x="45" y="17.5">Y</text><text x="26" y="67.5">Z</text>
+        </g>
+      </svg>
+
+      <h1 class="name" aria-label="Valithar">
+        <span style="--i:0">V</span><span style="--i:1">A</span><span style="--i:2">L</span><span style="--i:3">I</span><span style="--i:4">T</span><span style="--i:5">H</span><span style="--i:6">A</span><span style="--i:7">R</span>
+      </h1>
+
+      <div class="hero-row">
+        <div class="hero-copy">
+          <div class="tags"><span>Blender Specialist</span><span>Roblox Builder</span><span>Germany</span></div>
+          <p class="bio" id="bio"
+             data-text="I'm an 18 year old Blender modeler and Roblox Builder from Germany I specialize in Modeling all sorts of things from Weapons all the way to buildings. My journey through many Star wars projects has let me show my talent in many communities. This talent can be used to create your game too. Feel free to check out my projects and contact me if needed."></p>
+          <div class="cta">
+            <a class="btn primary" href="#work">See the work <span>↓</span></a>
+            <a class="btn" href="#contact">Say hi</a>
+            <button class="btn admin-only" id="btn-profile">✎ Edit profile</button>
+          </div>
+          <div class="stats">
+            <div><b>30+</b><small>Projects</small></div>
+            <div><b>2+</b><small>Years</small></div>
+            <div><b>100%</b><small>Passion</small></div>
+          </div>
+        </div>
+
+        <div class="avatar-wrap">
+          <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+            <defs><path id="circ" d="M100,100 m-88,0 a88,88 0 1,1 176,0 a88,88 0 1,1 -176,0" /></defs>
+            <text><textPath href="#circ" textLength="545" lengthAdjust="spacing">BLENDER ✺ ROBLOX ✺ STAR WARS ✺ WEAPONS ✺ BUILDINGS ✺ </textPath></text>
+          </svg>
+          <div class="avatar" id="avatar">
+            <img src="/profile.webp" alt="Valithar" width="400" height="400" decoding="async"
+                 onerror="this.parentElement.classList.add('noimg')" onload="this.parentElement.classList.remove('noimg')" />
+            <span class="initial">V</span>
+          </div>
+          <div class="status"><i>●</i><div><small>Status</small><b>Available</b></div></div>
         </div>
       </div>
 
-      <div class="hero-right">
-        <span class="pill"><i>✦</i> Roblox Builder</span>
-        <h1>Hi, I'm <br /><span class="name" id="name"></span></h1>
-
-        <div class="badges">
-          <span class="badge fx"><i>☆</i> Blender Specialist</span>
-          <span class="badge fx"><i>◍</i> Roblox Builder</span>
-        </div>
-
-        <p class="bio" id="bio"
-           data-text="I'm an 18 year old Blender modeler and Roblox Builder from Germany I specialize in Modeling all sorts of things from Weapons all the way to buildings. My journey through many Star wars projects has let me show my talent in many communities. This talent can be used to create your game too. Feel free to check out my projects and contact me if needed."></p>
-
-        <div class="cta">
-          <a class="btn primary" href="#work">View Projects <span>↗</span></a>
-          <a class="btn" href="#contact">Contact Me</a>
-          <button class="btn admin-only" id="btn-profile">✎ Edit profile</button>
-        </div>
-
-        <div class="stats">
-          <div class="fx"><b>30+</b><small>Projects</small></div>
-          <div class="fx"><b>2+</b><small>Years</small></div>
-          <div class="fx"><b>100%</b><small>Passion</small></div>
-        </div>
-      </div>
+      <div class="hud hud-bottom"><span id="hud-xy">X 0.00 · Y 0.00</span><span>Scroll ↓</span></div>
     </section>
 
-    <div class="marquee" aria-hidden="true">
-      <div class="track"><span>Blender</span><i>✦</i><span>Roblox</span><i>✦</i><span>Weapons</span><i>✦</i><span>Buildings</span><i>✦</i><span>Star Wars</span><i>✦</i><span>3D Modeling</span><i>✦</i><span>Blender</span><i>✦</i><span>Roblox</span><i>✦</i><span>Weapons</span><i>✦</i><span>Buildings</span><i>✦</i><span>Star Wars</span><i>✦</i><span>3D Modeling</span><i>✦</i></div>
-      <div class="track rev outline"><span>Modeling</span><i>✦</i><span>Creating</span><i>✦</i><span>Building</span><i>✦</i><span>Detailing</span><i>✦</i><span>Delivering</span><i>✦</i><span>Modeling</span><i>✦</i><span>Creating</span><i>✦</i><span>Building</span><i>✦</i><span>Detailing</span><i>✦</i><span>Delivering</span><i>✦</i></div>
+    <div class="tape marquee" aria-hidden="true">
+      <div class="track"><span>Blender</span><i>✺</i><span>Roblox</span><i>✺</i><span>Weapons</span><i>✺</i><span>Buildings</span><i>✺</i><span>Star Wars</span><i>✺</i><span>3D Modeling</span><i>✺</i><span>Blender</span><i>✺</i><span>Roblox</span><i>✺</i><span>Weapons</span><i>✺</i><span>Buildings</span><i>✺</i><span>Star Wars</span><i>✺</i><span>3D Modeling</span><i>✺</i></div>
     </div>
 
     <section id="skills" class="skills">
-      <div class="section-head"><h2>What I do</h2><p>Modeling · Building · Roblox</p><div class="admin-actions"><button class="btn primary" id="btn-add-skill">+ Add skill</button></div></div>
+      <div class="section-head"><h2>What I <em>do</em></h2><p>Modeling · Building · Roblox</p><div class="admin-actions"><button class="btn primary" id="btn-add-skill">+ Add skill</button></div></div>
       <div class="skill-grid" id="skill-grid"></div>
     </section>
 
     <section id="work" class="work">
       <div class="section-head">
-        <h2>Projects</h2>
+        <h2>Selected <em>work</em></h2>
         <p><span id="count">00</span> · click to explore</p>
         <div class="admin-actions"><button class="btn primary" id="btn-add">+ Add model</button><button class="btn" id="btn-pw">Password</button></div>
       </div>
@@ -89,24 +108,30 @@
     </section>
 
     <section class="process">
-      <div class="section-head"><h2>Your game, my models</h2><p>How it works</p></div>
+      <div class="section-head"><h2>Your game, <em>my models</em></h2><p>How it works</p></div>
       <div class="steps">
-        <div class="step fx"><span class="num">01</span><b>Say hi</b><p>Contact me on Discord or Roblox.</p></div>
-        <div class="step fx"><span class="num">02</span><b>Share your idea</b><p>Tell me what you need: a weapon, a building or a whole set.</p></div>
-        <div class="step fx"><span class="num">03</span><b>Get your models</b><p>I model it in Blender and deliver it, ready for your game.</p></div>
+        <div class="step"><span class="num">Step 01</span><b>Say hi</b><p>Contact me on Discord or Roblox.</p></div>
+        <div class="step"><span class="num">Step 02</span><b>Share your idea</b><p>Tell me what you need: a weapon, a building or a whole set.</p></div>
+        <div class="step"><span class="num">Step 03</span><b>Get your models</b><p>I model it in Blender and deliver it, ready for your game.</p></div>
       </div>
     </section>
 
     <section id="contact" class="contact">
       <p class="eyebrow">Got a project?</p>
+      <h2 class="big">Let's make it <em>3D.</em></h2>
       <div class="socials">
-        <a href="#" id="discord" title="Click to copy">Discord: rough4574</a><a href="https://www.roblox.com/search/users?keyword=valith_r" target="_blank" rel="noopener">Roblox: valith_r</a>
+        <a href="#" id="discord" title="Click to copy">Discord <span>rough4574</span></a>
+        <a href="https://www.roblox.com/search/users?keyword=valith_r" target="_blank" rel="noopener">Roblox <span>valith_r ↗</span></a>
       </div>
     </section>
 
     <button class="totop" id="totop" aria-label="Back to top">↑</button>
 
-    <footer><div class="bigname" aria-hidden="true">VALITHAR</div><p>© <span id="yr"></span> Valithar — Blender &amp; Roblox Builder</p></footer>
+    <footer>
+      <span>© <span id="yr"></span> Valithar</span>
+      <span>Blender &amp; Roblox Builder · Germany</span>
+      <a href="#top">Back to top ↑</a>
+    </footer>
   </main>
 
   <div class="modal-bg" id="modal-bg" hidden>
